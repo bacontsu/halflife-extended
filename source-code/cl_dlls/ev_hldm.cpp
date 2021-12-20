@@ -291,6 +291,27 @@ void EV_HLDM_GunshotDecalTrace(pmtrace_t* pTrace, char* decalName)
 				gEngfuncs.pEfxAPI->Draw_DecalIndex(gEngfuncs.pEfxAPI->Draw_DecalIndexFromName(decalName)),
 				gEngfuncs.pEventAPI->EV_IndexFromTrace(pTrace), 0, pTrace->endpos, 0);
 		}
+
+		// wallpuff code
+		int modelindex;
+		char* spritename = "sprites/shot_smoke.spr"; //name of your sprite
+
+		modelindex = gEngfuncs.pEventAPI->EV_FindModelIndex(spritename);
+
+		Vector velocity;
+		VectorCopy(pTrace->endpos, velocity);
+		velocity = velocity.Normalize() * 16;
+
+		Vector origin;
+		VectorMA(pTrace->endpos, 2, pTrace->plane.normal, origin);
+		VectorScale(pTrace->plane.normal, 8, velocity); //don't clip in the wall
+
+	//	If you wish to have sparks along with the smoke uncomment this line.
+		gEngfuncs.pEfxAPI->R_SparkShower(origin);
+
+		velocity[2] += 4; //make the wall puff drift upwards
+
+		gEngfuncs.pEfxAPI->R_TempSprite(origin, velocity, 0.2, modelindex, kRenderTransAdd, 0, 0.35, 1.0 /* life in seconds*/, FTENT_SPRANIMATE);
 	}
 }
 
@@ -472,6 +493,8 @@ void EV_HLDM_FireBullets(int idx, float* forward, float* right, float* up, int c
 				EV_HLDM_DecalGunshot(&tr, iBulletType);
 				break;
 			}
+
+
 		}
 
 		gEngfuncs.pEventAPI->EV_PopPMStates();
