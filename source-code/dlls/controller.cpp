@@ -213,10 +213,10 @@ void CController::Killed( entvars_t *pevAttacker, int iGib )
 	CSquadMonster::Killed( pevAttacker, iGib );
 }
 
-
+const GibData EggheadGibs = { "models/gibs/gibs_controller.mdl", 0, 6 };
 void CController::GibMonster()
 {
-	// delete balls
+	// delete balls		<- cruel as shit lmao
 	if (m_pBall[0])
 	{
 		UTIL_Remove( m_pBall[0] );
@@ -227,6 +227,9 @@ void CController::GibMonster()
 		UTIL_Remove( m_pBall[1] );
 		m_pBall[1] = NULL;
 	}
+
+	CGib::SpawnRandomGibs(pev, 4, EggheadGibs);	// Throw alien gibs
+
 	CSquadMonster::GibMonster( );
 }
 

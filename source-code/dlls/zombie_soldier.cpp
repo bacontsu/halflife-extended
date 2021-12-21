@@ -49,6 +49,8 @@ public:
 
 	float m_flNextFlinch;
 
+	void GibMonster();
+
 	void PainSound() override;
 	void AlertSound() override;
 	void IdleSound() override;
@@ -110,6 +112,14 @@ const char *CZombieSoldier::pPainSounds[] =
 	"zombie/zo_pain1.wav",
 	"zombie/zo_pain2.wav",
 };
+
+const GibData ZombGibs = { "models/gibs/gibs_zombie.mdl", 0, 2 };
+void CZombieSoldier::GibMonster()
+{
+	CGib::SpawnRandomGibs(pev, 2, ZombGibs);
+
+	CBaseMonster::GibMonster();
+}
 
 //=========================================================
 // Classify - indicates this monster's place in the 

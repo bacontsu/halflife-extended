@@ -1213,7 +1213,7 @@ void CPitdrone::CheckAmmo()
 	}
 }
 
-const GibData PitDroneGibs = { "models/pit_drone_gibs.mdl", 0, 7 };
+const GibData PitDroneGibs = { "models/gibs/gibs_pitdrone.mdl", 0, 9 };
 
 void CPitdrone::GibMonster()
 {
