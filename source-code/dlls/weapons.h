@@ -854,6 +854,21 @@ private:
 	unsigned short m_usCrossbow2;
 };
 
+class CCrossbowBolt : public CBaseEntity
+{
+	void Spawn() override;
+	void Precache() override;
+	int  Classify() override;
+	void EXPORT BubbleThink();
+	void EXPORT BoltTouch(CBaseEntity* pOther);
+	void EXPORT ExplodeThink();
+
+	int m_iTrail;
+
+public:
+	static CCrossbowBolt* BoltCreate();
+};
+
 enum shotgun_e
 {
 	SHOTGUN_IDLE = 0,
