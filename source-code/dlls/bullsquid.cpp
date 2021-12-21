@@ -219,6 +219,9 @@ public:
 	int IgnoreConditions () override;
 	MONSTERSTATE GetIdealState () override;
 
+	void Killed(entvars_t* pevAttacker, int iGib);
+	void PrescheduleThink() override;
+
 	int	Save( CSave &save ) override;
 	int Restore( CRestore &restore ) override;
 
@@ -241,6 +244,20 @@ TYPEDESCRIPTION	CBullsquid::m_SaveData[] =
 };
 
 IMPLEMENT_SAVERESTORE( CBullsquid, CBaseMonster );
+
+
+void CBullsquid::PrescheduleThink()
+{
+	// at random, initiate a blink if not already blinking
+	if ((pev->skin == 0) && RANDOM_LONG(0, 50) == 0)
+	{// start blinking!
+		pev->skin = 1;
+	}
+	else if (pev->skin != 0)
+	{// already blinking
+		pev->skin--;
+	}
+}
 
 //=========================================================
 // IgnoreConditions 
@@ -1328,6 +1345,13 @@ void CBullsquid::GibMonster()
 	SetThink(&CBaseMonster::SUB_Remove);
 	pev->nextthink = gpGlobals->time;
 }
+
+void CBullsquid::Killed(entvars_t* pevAttacker, int iGib)
+{
+	pev->skin = 1;
+	CBaseMonster::Killed(pevAttacker, iGib);
+}
+
 //=========================================================
 // Dead Squid PROP
 //=========================================================

@@ -72,7 +72,8 @@ int iAgruntMuzzleFlash;
 #define AGRUNT_HIVEHAND (0)
 #define AGRUNT_FIREBALL (1)
 #define AGRUNT_PLASMARIFLE (2)
-#define AGRUNT_TOXICGUN (3)
+//#define AGRUNT_TOXICGUN (3)
+#define AGRUNT_NAKED (3)
 
 
 #define		AGRUNT_MELEE_DIST	100
@@ -112,6 +113,8 @@ public:
 	void FirePlasma();
 	void FireToxic();
 	void FireHornets();
+
+	void Killed(entvars_t* pevAttacker, int iGib);
 
 	CUSTOM_SCHEDULES;
 
@@ -568,12 +571,14 @@ void CAGrunt :: Spawn()
 {
 	Precache( );
 
-	if (pev->weapons == AGRUNT_HIVEHAND)
-		SET_MODEL(ENT(pev), "models/agrunt.mdl");
+	//this check is kinda shit, we should combine them into one model at some point
+	SET_MODEL(ENT(pev), "models/agrunt.mdl");
 	if (pev->weapons == AGRUNT_FIREBALL)
 		SET_MODEL(ENT(pev), "models/agrunt_2.mdl");
 	if (pev->weapons == AGRUNT_PLASMARIFLE)
 		SET_MODEL(ENT(pev), "models/agrunt_3.mdl");
+	if (pev->weapons == AGRUNT_NAKED)
+		SET_MODEL(ENT(pev), "models/agrunt_noarmor.mdl");
 	
 	UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 64));
 
@@ -1374,6 +1379,13 @@ void CAGrunt::FireToxic()
 
 	SetBlending(0, angDir.x);
 }
+
+void CAGrunt::Killed(entvars_t* pevAttacker, int iGib)
+{
+	pev->skin = 2;
+	CBaseMonster::Killed(pevAttacker, iGib);
+}
+
 //=========================================================
 // Dead AGrunt PROP
 //=========================================================
@@ -1425,3 +1437,4 @@ void CDeadAGrunt::Spawn()
 	//	pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 	MonsterInitDead();
 }
+

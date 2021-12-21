@@ -87,6 +87,8 @@ public:
 	BOOL CheckRangeAttack1(float flDot, float flDist) override;
 	BOOL CheckMeleeAttack1(float flDot, float flDist);
 
+	void Killed(entvars_t* pevAttacker, int iGib);
+	void PrescheduleThink() override;
 
 	CBaseEntity* KickNormal(void);
 	CBaseEntity* KickLow(void);
@@ -131,6 +133,26 @@ void CDiablo::DeathSound()
 
 	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "panthereye/pa_death1.wav", 1.0, ATTN_NORM, 0, pitch);
 }
+
+void CDiablo::Killed(entvars_t* pevAttacker, int iGib)
+{
+	pev->skin = 6;
+	CSquadMonster::Killed(pevAttacker, iGib);
+}
+
+void CDiablo::PrescheduleThink()
+{
+	// at random, initiate a blink if not already blinking
+	if ((pev->skin == 0) && RANDOM_LONG(0, 50) == 0)
+	{// start blinking!
+		pev->skin = 6;
+	}
+	else if (pev->skin != 0)
+	{// already blinking
+		pev->skin--;
+	}
+}
+
 //====================================================
 // Classification
 //====================================================

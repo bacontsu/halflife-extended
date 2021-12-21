@@ -46,6 +46,8 @@ public:
 	Vector Center() override;
 	Vector BodyTarget(const Vector& posSrc) override;
 
+	void Killed(entvars_t* pevAttacker, int iGib);
+
 	int	ObjectCaps() override { return CBaseMonster::ObjectCaps() | FCAP_IMPULSE_USE; }
 
 	void GibMonster() override;
@@ -409,4 +411,10 @@ void CChubMonster::PrescheduleThink()
 	{// already blinking
 		pev->skin--;
 	}
+}
+
+void CChubMonster::Killed(entvars_t* pevAttacker, int iGib)
+{
+	pev->skin = 2;
+	CBaseMonster::Killed(pevAttacker, iGib);
 }

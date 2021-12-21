@@ -100,6 +100,8 @@ public:
 	Schedule_t *GetSchedule() override;
 	void GibMonster();
 
+	void Killed(entvars_t* pevAttacker, int iGib);
+
 	int	Save( CSave &save ) override;
 	int Restore( CRestore &restore ) override;
 
@@ -1326,6 +1328,12 @@ void CHoundeye::GibMonster()
 
 	SetThink(&CBaseMonster::SUB_Remove);
 	pev->nextthink = gpGlobals->time;
+}
+
+void CHoundeye::Killed(entvars_t* pevAttacker, int iGib)
+{
+	pev->skin = 2;
+	CBaseMonster::Killed(pevAttacker, iGib);
 }
 
 

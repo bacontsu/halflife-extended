@@ -281,6 +281,7 @@ int CISlave :: ISoundMask ()
 
 void CISlave::Killed( entvars_t *pevAttacker, int iGib )
 {
+	pev->skin = 3;
 	ClearBeams( );
 	CSquadMonster::Killed( pevAttacker, iGib );
 }
@@ -598,7 +599,7 @@ void CISlave::PrescheduleThink()
 {
 	if ((pev->skin == 0) && RANDOM_LONG(0, 70) == 0)
 	{// start blinking!
-		pev->skin = 4;
+		pev->skin = 3;
 	}
 	else if (pev->skin != 0)
 	{// already blinking
