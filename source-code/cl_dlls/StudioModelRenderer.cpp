@@ -1341,8 +1341,13 @@ int CStudioModelRenderer::StudioDrawModel(int flags)
 		IEngineStudio.StudioSetRemapColors(m_nTopColor, m_nBottomColor);
 
 		StudioRenderModel();
-
-		// meow dynamic hand testing
+		
+		// ============================MODULAR CLIENTSIDE HAND============================
+		// "cl_hands" system, to easily change hand model between mods
+		// by Bacontsu, written for HL:E
+		// HOW TO USE : this function will merges v_hands.mdl with weapon models, to easily change between hands
+		
+		// main model.
 		if (m_pCurrentEntity == gEngfuncs.GetViewModel())
 		{
 			if (CVAR_GET_FLOAT("developer") > 4)
@@ -1350,17 +1355,17 @@ int CStudioModelRenderer::StudioDrawModel(int flags)
 
 			cl_entity_t saveent = *m_pCurrentEntity;
 
-			model_t* lightmodel = IEngineStudio.Mod_ForName("models/v_hands.mdl", 1); //load model 
+			model_t* handmodel = IEngineStudio.Mod_ForName("models/v_hands.mdl", 1); //load model 
 
 			if (CVAR_GET_FLOAT("cl_hands") != 0)
 			{
 				m_pCurrentEntity->curstate.body = CVAR_GET_FLOAT("cl_hands") - 1;
 
-				m_pStudioHeader = (studiohdr_t*)IEngineStudio.Mod_Extradata(lightmodel);
+				m_pStudioHeader = (studiohdr_t*)IEngineStudio.Mod_Extradata(handmodel);
 
 				IEngineStudio.StudioSetHeader(m_pStudioHeader);
 
-				StudioMergeBones(lightmodel); //merge both model
+				StudioMergeBones(handmodel); //merge both model
 
 				IEngineStudio.StudioSetupLighting(&lighting);
 
@@ -1372,11 +1377,50 @@ int CStudioModelRenderer::StudioDrawModel(int flags)
 			}
 		}
 
-		// clientside batterylight
+		// light model.
+		if (m_pCurrentEntity == gEngfuncs.GetViewModel())
+		{
+			cl_entity_t saveent = *m_pCurrentEntity;
+
+			model_t* handmodel = IEngineStudio.Mod_ForName("models/v_hands_light.mdl", 1); //load model 
+
+			if (CVAR_GET_FLOAT("cl_hands") != 0)
+			{
+				m_pCurrentEntity->curstate.body = CVAR_GET_FLOAT("cl_hands") - 1;
+
+				m_pStudioHeader = (studiohdr_t*)IEngineStudio.Mod_Extradata(handmodel);
+
+				IEngineStudio.StudioSetHeader(m_pStudioHeader);
+
+				StudioMergeBones(handmodel); //merge both model
+
+				m_pCurrentEntity->curstate.rendermode = kRenderTransAdd;
+
+				lighting.plightvec = dir;
+				IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting);
+
+				// Fullbright
+				lighting.color = Vector(1.0f, 1.0f, 1.0f);
+				lighting.ambientlight = 255;
+				lighting.shadelight = 0;
+
+				IEngineStudio.StudioSetupLighting(&lighting);
+
+				StudioRenderModel();
+
+				StudioCalcAttachments();
+
+				*m_pCurrentEntity = saveent;
+			}
+		}
+
+		// END
+
+
+
+		// clientside batterylight lightning effect
 		if (!strcmp(m_pCurrentEntity->model->name, "models/w_battery.mdl") && (m_pCurrentEntity->curstate.body == 0 || m_pCurrentEntity->curstate.body == 3))
 		{
-			gEngfuncs.Con_Printf("battery detected\n");
-
 			dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
 			VectorCopy(m_pCurrentEntity->curstate.origin, dl->origin);
 			dl->radius = 20;
@@ -1451,8 +1495,7 @@ int CStudioModelRenderer::StudioDrawModel(int flags)
 			*m_pCurrentEntity = saveent;
 		}
 
-
-
+		// END
 
 	}
 

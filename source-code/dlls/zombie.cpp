@@ -318,6 +318,7 @@ void CZombie :: Precache()
 	int i;
 
 	PRECACHE_MODEL("models/zombie.mdl");
+	PRECACHE_MODEL("models/gibs/gibs_zombie.mdl");
 
 	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackHitSounds[i]);

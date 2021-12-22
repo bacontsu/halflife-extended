@@ -372,6 +372,7 @@ void CHEVZombie::Precache()
 	int i;
 
 	PRECACHE_MODEL("models/hevzombie.mdl");
+	PRECACHE_MODEL("models/gibs/gibs_zombie.mdl");
 
 	PRECACHE_SOUND("zombiehev/hev_zombiesuit_hit1.wav");
 	PRECACHE_SOUND("zombiehev/hev_zombiesuit_hit2.wav");
