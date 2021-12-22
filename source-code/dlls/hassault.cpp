@@ -115,6 +115,8 @@ public:
 	void Melee(void);
 	void CallForBackup(char* szClassname, float flDist, EHANDLE hEnemy, Vector& vecLocation);
 
+	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;
+
 	BOOL CheckRangeAttack1(float flDot, float flDist);
 	BOOL CheckMeleeAttack1(float flDot, float flDist);
 	BOOL CheckMeleeAttack2(float flDot, float flDist);
@@ -761,6 +763,26 @@ Schedule_t* CHAssault::GetSchedule(void)
 	}
 	//if all else fails, the base probably knows what to do
 	return CBaseMonster::GetSchedule();
+}
+
+//=========================================================
+// TraceAttack - make sure we're not taking it in the armour
+//=========================================================
+void CHAssault::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType)
+{
+	// check for helmet shot
+	if (ptr->iHitgroup == 11)
+	{
+		// absorb damage
+		flDamage -= 20;
+		if (flDamage <= 0)
+		{
+			UTIL_Ricochet(ptr->vecEndPos, 1.0);
+			flDamage = 0.01;
+		}
+		
+	}
+	CBaseMonster::TraceAttack(pevAttacker, flDamage, vecDir, ptr, bitsDamageType);
 }
 
 void CHAssault::KeyValue(KeyValueData* pkvd)
