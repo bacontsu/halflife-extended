@@ -645,7 +645,7 @@ void COtis :: Spawn()
 	{
 		if (m_iOtisVest != OtisVest::Random)
 		{
-			if (m_iOtisVest <= 3)//if the shirt is light blue...
+			if (m_iOtisVest <= OtisVest::vest_pants)//if the shirt is light blue...
 			{
 				m_iOtisArms = RANDOM_LONG(0, 1);//pick light blue sleeves
 			}
@@ -655,7 +655,7 @@ void COtis :: Spawn()
 	}
 	if (m_iOtisVest == OtisVest::Random)// pick random pants and vest
 	{
-		if (m_iOtisArms <= 1)//if the sleeves are light blue...
+		if (m_iOtisArms <= OtisArms::RolledUp)//if the sleeves are light blue...
 		{
 			m_iOtisVest = RANDOM_LONG(0, 3);//pick a light blue shirt
 		}

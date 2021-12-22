@@ -2339,6 +2339,7 @@ void CJanitor::Spawn(void)
 	m_flFieldOfView = VIEW_FIELD_WIDE;
 	m_MonsterState = MONSTERSTATE_NONE;
 	pev->body = 0;
+	pev->skin = 0;
 
 
 	//     m_flDistTooFar          = 256.0;
