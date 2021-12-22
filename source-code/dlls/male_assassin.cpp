@@ -47,7 +47,6 @@ namespace Body
 	{
 		Random = -1,
 		Classic = 0,
-		Tactical,
 		Heavy
 	};
 }
@@ -71,7 +70,7 @@ namespace Weapon
 		Sniper,
 		Shotgun,
 		Saw,
-		M4,
+		SG550,
 		None,
 		Random = -1
 	};
@@ -107,13 +106,12 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 //=========================================================
 // monster-specific DEFINE's
 //=========================================================
-#define	MASSASSIN_MP5_CLIP_SIZE			36 // how many bullets in a clip? - NOTE: 3 round burst sound, so keep as 3 * x!
+#define	MASSASSIN_MP5_CLIP_SIZE			30 // how many bullets in a clip? - NOTE: 3 round burst sound, so keep as 3 * x!
 #define MASSN_SNIPER_CLIP_SIZE			1
 #define GRUNT_VOL						0.35		// volume of grunt sounds
 #define GRUNT_ATTN						ATTN_NORM	// attenutation of grunt sentences
 #define HGRUNT_LIMP_HEALTH				20
 #define HGRUNT_DMG_HEADSHOT				( DMG_BULLET | DMG_CLUB )	// damage types that can kill a grunt with a single headshot.
-#define HGRUNT_NUM_HEADS				2 // how many grunt heads are there? 
 #define HGRUNT_MINIMUM_HEADSHOT_DAMAGE	15 // must do at least this much damage in one shot to head to score a headshot kill
 #define	MASSASSIN_SENTENCE_VOLUME			(float)0.35 // volume of grunt sentences
 
@@ -121,7 +119,7 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 #define MASSN_MP5_LAUNCHER (1);//MP5 + grenade launcher
 #define MASSN_SHOTGUN (2);//Shotgun
 #define MASSN_SAW (3);//M-Gun
-#define MASSN_SNIPER (4);//M40A1
+#define MASSN_SNIPER (4);//SG5500A1
 #define MASSN_NOGUN (5);//No weapon equiped
 
 //=========================================================
@@ -953,7 +951,7 @@ void CMOFAssassin::ShootRifle()
 }
 
 //=========================================================
-// Shoot M4A1
+// Shoot SG550A1
 //=========================================================
 void CMOFAssassin::ShootAR()
 {
@@ -1121,7 +1119,7 @@ void CMOFAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			ShootAR();
 
-			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/ars1.wav", 1, ATTN_NORM);
+			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/556ar_shoot.wav", 1, ATTN_NORM);
 		}
 		CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
 		}
@@ -1211,8 +1209,6 @@ void CMOFAssassin::Spawn()
 	if (pev->weapons == 3)//saw
 	{
 		m_iWeaponIdx = Weapon::Saw;
-		if (m_Body == Body::Random)
-			m_Body = Body::Heavy;
 		m_cClipSize = 50;
 	}
 	if (pev->weapons == 4)//rifle
@@ -1225,7 +1221,7 @@ void CMOFAssassin::Spawn()
 
 	if (pev->weapons == 5)//m4
 	{
-		m_iWeaponIdx = Weapon::M4;
+		m_iWeaponIdx = Weapon::SG550;
 		m_cClipSize = 20;
 	}
 
@@ -1241,7 +1237,7 @@ void CMOFAssassin::Spawn()
 	}
 	if (m_Body == Body::Random)
 	{
-		m_Body = RANDOM_LONG(0, 2);
+		m_Body = RANDOM_LONG(0, 1);
 	}
 	if (m_iGruntHead == Head::Random)
 	{
@@ -1287,6 +1283,7 @@ void CMOFAssassin :: Precache()
 	PRECACHE_SOUND("weapons/sniper_fire.wav");
 	PRECACHE_SOUND("weapons/saw_fire2.wav");
 	PRECACHE_SOUND("weapons/saw_fire1.wav");
+	PRECACHE_SOUND("weapons/556ar_shoot.wav");
 
 	PRECACHE_SOUND("common/boots_heavy1.wav");
 	PRECACHE_SOUND("common/boots_heavy3.wav");
@@ -2558,6 +2555,7 @@ public:
 	int m_SpawnChance;
 	int m_iWeaponIdx;
 	int m_Body;
+	int m_Nvg;
 };
 
 LINK_ENTITY_TO_CLASS( monster_assassin_repel, CMOFAssassinRepel );
@@ -2567,6 +2565,11 @@ void CMOFAssassinRepel::KeyValue(KeyValueData* pkvd)
 	if (FStrEq("torso", pkvd->szKeyName))
 	{
 		m_Body = atoi(pkvd->szValue);
+		pkvd->fHandled = true;
+	}
+	if (FStrEq("nvg", pkvd->szKeyName))
+	{
+		m_Nvg = atoi(pkvd->szValue);
 		pkvd->fHandled = true;
 	}
 	if (FStrEq(pkvd->szKeyName, "head"))
@@ -2613,10 +2616,15 @@ void CMOFAssassinRepel::Spawn()
 	}
 	if (m_iGruntHead == Head::Random)
 	{
-		m_iGruntHead = RANDOM_LONG(0, 3);
+		m_iGruntHead = RANDOM_LONG(0, 2);
+	}
+	if (m_Nvg == Nvg::Random)
+	{
+		m_Nvg = RANDOM_LONG(0, 1);
 	}
 
 	SetBodygroup(BlkOpBodygroup::Head, m_iGruntHead);
+	SetBodygroup(BlkOpBodygroup::Nvg, m_Nvg);
 	SetBodygroup(BlkOpBodygroup::Body, m_Body);
 
 	SetUse( &CMOFAssassinRepel::RepelUse );
@@ -2660,6 +2668,7 @@ void CMOFAssassinRepel::RepelUse ( CBaseEntity *pActivator, CBaseEntity *pCaller
 	pGrunt->pev->weapons = pev->weapons;
 	pGrunt->m_iGruntHead = m_iGruntHead;
 	pGrunt->m_iWeaponIdx = m_iWeaponIdx;
+	pGrunt->m_Nvg = m_Nvg;
 
 	//Run logic to set up body groups (Spawn was already called once by Create above)
 	pGrunt->Spawn();
@@ -2691,6 +2700,7 @@ public:
 	static char *m_szPoses[3];
 	int m_iGruntHead;
 	int m_Body;
+	int m_Nvg;
 };
 
 char *CDeadMOFAssassin::m_szPoses[] = { "deadstomach", "deadside", "deadsitting" };
@@ -2705,6 +2715,11 @@ void CDeadMOFAssassin::KeyValue( KeyValueData *pkvd )
 	if (FStrEq("head", pkvd->szKeyName))
 	{
 		m_iGruntHead = atoi(pkvd->szValue);
+		pkvd->fHandled = true;
+	}
+	if (FStrEq("nvg", pkvd->szKeyName))
+	{
+		m_Nvg = atoi(pkvd->szValue);
 		pkvd->fHandled = true;
 	}
 	if (FStrEq("torso", pkvd->szKeyName))
@@ -2742,13 +2757,17 @@ void CDeadMOFAssassin:: Spawn()
 	// Corpses have less health
 	pev->health			= 8;
 
-	if (m_iGruntHead == Head::Random)
-	{
-		m_iGruntHead = RANDOM_LONG(0, 3);
-	}
 	if (m_Body == Body::Random)
 	{
 		m_Body = RANDOM_LONG(0, 1);
+	}
+	if (m_iGruntHead == Head::Random)
+	{
+		m_iGruntHead = RANDOM_LONG(0, 2);
+	}
+	if (m_Nvg == Nvg::Random)
+	{
+		m_Nvg = RANDOM_LONG(0, 1);
 	}
 
 	if (pev->skin == -1)
@@ -2758,6 +2777,7 @@ void CDeadMOFAssassin:: Spawn()
 
 	SetBodygroup(BlkOpBodygroup::Weapon, pev->weapons);
 	SetBodygroup(BlkOpBodygroup::Body, m_Body);
+	SetBodygroup(BlkOpBodygroup::Nvg, m_Nvg);
 	SetBodygroup(BlkOpBodygroup::Head, m_iGruntHead);
 
 	MonsterInitDead();

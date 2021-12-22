@@ -63,56 +63,70 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 #define HGRUNT_MINIMUM_HEADSHOT_DAMAGE	15 // must do at least this much damage in one shot to head to score a headshot kill
 #define	HGRUNT_SENTENCE_VOLUME			(float)0.35 // volume of grunt sentences
 
-namespace HGruntAllyBodygroup
+namespace HGruntBodygroup
 {
-enum HGruntAllyBodygroup
-{
-	Head = 1,
-	Weapon
-};
+	enum HGruntBodygroup
+	{
+		Head = 1,
+		Weapon
+	};
 }
 
-namespace HGruntAllyHead
+namespace Body
 {
-enum HGruntAllyHead
-{
-	Random = -1,
-	Gasmask = 0,
-	Gasmask2,
-	Skimask,
-	Comm_redberet,
-	Comm_greenberet,
-	Comm_blackberet,
-	Comm_redberet2,
-	Comm_greenberet2,
-	Helmet,
-	Helmet2,
-	Bandana,
-	Bandana2,
-	Bandana3,
-	Wolverine,
-	Fancyhelmet,
-	Fancyhelmet2,
-	Medic,
-	Medic2,
-	Engi,
-	Engi2,
-	MilPolice
-};
+	enum Body
+	{
+		Default = 0
+	};
 }
 
-namespace HGruntAllyWeapon
+
+namespace Head
 {
-enum HGruntAllyWeapon
+	enum Head
+	{
+		Random = -1,
+		Gasmask = 0,
+		Gasmask2,
+		Skimask,
+		Comm_redberet,
+		Comm_greenberet,
+		Comm_blackberet,
+		Comm_redberet2,
+		Comm_greenberet2,
+		Helmet,
+		Helmet2,
+		Bandana,
+		Bandana2,
+		Bandana3,
+		Wolverine,
+		Fancyhelmet,
+		Fancyhelmet2,
+		Medic,
+		Medic2,
+		Engi,
+		Engi2,
+		Rookie,
+		Spec,
+		Legend,
+	};
+}
+
+namespace Weapon
 {
-	MP5_GL = 0,
-	Shotgun,
-	Saw,
-	Sniper,
-	Rpg,
-	MP5,
-	None
-};
+	enum Weapon
+	{
+		MP5_gl = 0,
+		SG550,
+		Shotgun,
+		Saw,
+		Sniper,
+		RPG,
+		None,
+		None_shotgun,
+		None_saw,
+		Random = -1
+	};
 }
 
 //=========================================================
@@ -183,10 +197,14 @@ public:
 	void PainSound() override;
 	void IdleSound () override;
 	Vector GetGunPosition() override;
+
 	void Shoot ();
 	void Shotgun ();
 	void ShootRifle();
 	void ShootRpg();
+	void ShootAR();
+
+
 	void PrescheduleThink () override;
 	void GibMonster() override;
 	void SpeakSentence();
@@ -337,6 +355,9 @@ void CHGruntAlly :: SpeakSentence()
 //=========================================================
 void CHGruntAlly :: GibMonster ()
 {
+	Vector	vecGunPos;
+	Vector	vecGunAngles;
+
 	if( m_hWaitMedic )
 	{
 		auto pMedic = m_hWaitMedic.Entity<COFSquadTalkMonster>();
@@ -349,58 +370,55 @@ void CHGruntAlly :: GibMonster ()
 
 	if (pev->spawnflags & SF_SQUADMONSTER_DONTDROPGUN)
 	{
+		CGib::SpawnHeadGib(pev);// throw the infamous leg
 		CBaseMonster::GibMonster();
-		m_iWeaponIdx = HGruntAllyWeapon::None;
 		return;
 	}
-	Vector	vecGunPos;
-	Vector	vecGunAngles;
+	else
+		if (pev->weapons != 7)
+		{// throw a gun if the grunt has one
+			GetAttachment(0, vecGunPos, vecGunAngles);
 
-	if ( m_iWeaponIdx != HGruntAllyWeapon::None )
-	{// throw a gun if the grunt has one
-		GetAttachment( 0, vecGunPos, vecGunAngles );
-		
-		CBaseEntity *pGun;
-		if (pev->weapons == 2)
-		{
-			pGun = DropItem( "weapon_shotgun", vecGunPos, vecGunAngles );
-		}
-		if( pev->weapons == 3 )
-		{
-			pGun = DropItem( "weapon_m249", vecGunPos, vecGunAngles );
-		}
-		if (pev->weapons == 4)
-		{
-			pGun = DropItem("weapon_sniperrifle", vecGunPos, vecGunAngles);
-		}
-		if (pev->weapons == 5)
-		{
-			pGun = DropItem("weapon_rpg", vecGunPos, vecGunAngles);
-		}
-		else
-		{
-			pGun = DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
-		}
-		if ( pGun )
-		{
-			pGun->pev->velocity = Vector (RANDOM_FLOAT(-100,100), RANDOM_FLOAT(-100,100), RANDOM_FLOAT(200,300));
-			pGun->pev->avelocity = Vector ( 0, RANDOM_FLOAT( 200, 400 ), 0 );
-		}
-	
-		if (pev->weapons == 1)
-		{
-			pGun = DropItem( "ammo_ARgrenades", vecGunPos, vecGunAngles );
-			if ( pGun )
+			CBaseEntity* pGun = 0;
+			if (pev->weapons == 2)//shotgun
 			{
-				pGun->pev->velocity = Vector (RANDOM_FLOAT(-100,100), RANDOM_FLOAT(-100,100), RANDOM_FLOAT(200,300));
-				pGun->pev->avelocity = Vector ( 0, RANDOM_FLOAT( 200, 400 ), 0 );
+				pGun = DropItem("weapon_shotgun", vecGunPos, vecGunAngles);
 			}
+			if (pev->weapons == 3)//m-gun
+			{
+				pGun = DropItem("weapon_m249", vecGunPos, vecGunAngles);
+			}
+			if (pev->weapons == 4)//sniper rifle
+			{
+				pGun = DropItem("weapon_sniperrifle", vecGunPos, vecGunAngles);
+			}
+			if (pev->weapons == 5)//rpg
+			{
+				pGun = DropItem("weapon_rpg", vecGunPos, vecGunAngles);
+			}
+			if (pev->weapons == 6)//SG550
+			{
+				pGun = DropItem("weapon_assaultrifle", vecGunPos, vecGunAngles);
+			}
+			if (pev->weapons == 1)//mp5 + grenlauncher
+			{
+				pGun = DropItem("ammo_ARgrenades", vecGunPos, vecGunAngles);
+				pGun = DropItem("weapon_9mmAR", vecGunPos, vecGunAngles);
+			}
+			if (pev->weapons == 0)//mp5
+			{
+				pGun = DropItem("weapon_9mmAR", vecGunPos, vecGunAngles);
+			}
+			if (pGun)
+			{
+				pGun->pev->velocity = Vector(RANDOM_FLOAT(-100, 100), RANDOM_FLOAT(-100, 100), RANDOM_FLOAT(200, 300));
+				pGun->pev->avelocity = Vector(0, RANDOM_FLOAT(200, 400), 0);
+			}
+
+			pev->weapons = 7;
 		}
-
-		m_iWeaponIdx = HGruntAllyWeapon::None;
-	}
-
-	CBaseMonster :: GibMonster();
+	else
+		CBaseMonster::GibMonster();
 }
 
 //=========================================================
@@ -1031,6 +1049,12 @@ void CHGruntAlly::ShootRifle()
 		return;
 	}
 
+	int Dmg = 20;
+	if (g_iSkillLevel == SKILL_MEDIUM)
+		Dmg = 25;
+	if (g_iSkillLevel > SKILL_MEDIUM)
+		Dmg = 30;
+
 	Vector vecShootOrigin = GetGunPosition();
 	Vector vecShootDir = ShootAtEnemy(vecShootOrigin);
 
@@ -1038,7 +1062,7 @@ void CHGruntAlly::ShootRifle()
 
 	Vector	vecShellVelocity = gpGlobals->v_right * RANDOM_FLOAT(40, 90) + gpGlobals->v_up * RANDOM_FLOAT(75, 200) + gpGlobals->v_forward * RANDOM_FLOAT(-40, 40);
 	EjectBrass(vecShootOrigin - vecShootDir * 24, vecShellVelocity, pev->angles.y, m_iShotgunShell, TE_BOUNCE_SHOTSHELL);
-	FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_6DEGREES, 2048, BULLET_PLAYER_762); // shoot +-3 degrees
+	FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_6DEGREES, 2048, BULLET_PLAYER_762, 4, Dmg); // shoot +-3 degrees
 
 	pev->effects |= EF_MUZZLEFLASH;
 
@@ -1077,6 +1101,33 @@ void CHGruntAlly::ShootRpg()
 }
 
 //=========================================================
+// Shoot SG550A1
+//=========================================================
+void CHGruntAlly::ShootAR()
+{
+	if (m_hEnemy == NULL)
+	{
+		return;
+	}
+
+	Vector vecShootOrigin = GetGunPosition();
+	Vector vecShootDir = ShootAtEnemy(vecShootOrigin);
+
+	UTIL_MakeVectors(pev->angles);
+
+	Vector	vecShellVelocity = gpGlobals->v_right * RANDOM_FLOAT(40, 90) + gpGlobals->v_up * RANDOM_FLOAT(75, 200) + gpGlobals->v_forward * RANDOM_FLOAT(-40, 40);
+	EjectBrass(vecShootOrigin - vecShootDir * 24, vecShellVelocity, pev->angles.y, m_iBrassShell, TE_BOUNCE_SHELL);
+	FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_10DEGREES, 2048, BULLET_PLAYER_556); // shoot +-5 degrees
+
+	pev->effects |= EF_MUZZLEFLASH;
+
+	m_cAmmoLoaded--;// take away a bullet!
+
+	Vector angDir = UTIL_VecToAngles(vecShootDir);
+	SetBlending(0, angDir.x);
+}
+
+//=========================================================
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
 //=========================================================
@@ -1093,42 +1144,54 @@ void CHGruntAlly :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			{
 				break;
 			}
-			Vector	vecGunPos;
-			Vector	vecGunAngles;
+			else
+			{
+				Vector	vecGunPos;
+				Vector	vecGunAngles;
 
-			GetAttachment( 0, vecGunPos, vecGunAngles );
+				GetAttachment(0, vecGunPos, vecGunAngles);
 
-			// switch to body group with no gun.
-			SetBodygroup( HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::None );
+				// switch to body with no gun.
+				if (pev->weapons == 2)//shotgun
+					SetBodygroup(HGruntBodygroup::Weapon, Weapon::None_shotgun);//shotgunner torso
+				if (pev->weapons == 3)//saw
+					SetBodygroup(HGruntBodygroup::Weapon, Weapon::None_saw);//machinegunner torso
+				else
+					SetBodygroup(HGruntBodygroup::Weapon, Weapon::None);//generic torso
+				m_iWeaponIdx = Weapon::None;
 
-			// now spawn a gun.
-			if (pev->weapons == 2)
-			{
-				 DropItem( "weapon_shotgun", vecGunPos, vecGunAngles );
+				// now spawn a gun.
+				if (pev->weapons == 2)
+				{
+					DropItem("weapon_shotgun", vecGunPos, vecGunAngles);
+				}
+				if (pev->weapons == 3)
+				{
+					DropItem("weapon_m249", vecGunPos, vecGunAngles);
+				}
+				if (pev->weapons == 4)
+				{
+					DropItem("weapon_sniperrifle", vecGunPos, vecGunAngles);
+				}
+				if (pev->weapons == 5)
+				{
+					DropItem("weapon_rpg", vecGunPos, vecGunAngles);
+				}
+				if (pev->weapons == 6)
+				{
+					DropItem("weapon_assaultrifle", vecGunPos, vecGunAngles);
+				}
+				if (pev->weapons == 1)
+				{
+					DropItem("ammo_ARgrenades", BodyTarget(pev->origin), vecGunAngles);
+					DropItem("weapon_9mmAR", BodyTarget(pev->origin), vecGunAngles);
+				}
+				if (pev->weapons == 0)
+				{
+					DropItem("weapon_9mmAR", vecGunPos, vecGunAngles);
+				}
+				pev->weapons = 7;
 			}
-			if( pev->weapons == 3 )
-			{
-				DropItem( "weapon_m249", vecGunPos, vecGunAngles );
-			}
-			if (pev->weapons == 4)
-			{
-				DropItem("weapon_sniperrifle", vecGunPos, vecGunAngles);
-			}
-			if (pev->weapons == 5)
-			{
-				DropItem("weapon_rpg", vecGunPos, vecGunAngles);
-			}
-			if (pev->weapons == 0)
-			{
-				 DropItem( "weapon_9mmAR", vecGunPos, vecGunAngles );
-			}
-			if (pev->weapons == 1)
-			{
-				DropItem( "ammo_ARgrenades", BodyTarget( pev->origin ), vecGunAngles );
-				DropItem("weapon_9mmAR", vecGunPos, vecGunAngles);
-			}
-
-			m_iWeaponIdx = HGruntAllyWeapon::None;
 			}
 			break;
 
@@ -1177,21 +1240,28 @@ void CHGruntAlly :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		case HGRUNT_AE_BURST1:
 		{
-			if ( pev->weapons == 0 || pev->weapons == 1)
+			if (pev->weapons == 0 || pev->weapons == 1)
 			{
 				Shoot();
 
 				// the first round of the three round burst plays the sound and puts a sound in the world sound list.
-				if ( RANDOM_LONG(0,1) )
+				if (RANDOM_LONG(0, 1))
 				{
-					EMIT_SOUND( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun1.wav", 1, ATTN_NORM );
+					EMIT_SOUND(ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun1.wav", 1, ATTN_NORM);
 				}
 				else
 				{
-					EMIT_SOUND( ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun2.wav", 1, ATTN_NORM );
+					EMIT_SOUND(ENT(pev), CHAN_WEAPON, "hgrunt/gr_mgun2.wav", 1, ATTN_NORM);
 				}
 			}
-			if( pev->weapons == 3 )
+			if (pev->weapons == 2)
+			{
+				Shotgun();
+
+				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sbarrel1.wav", 1, ATTN_NORM);
+			}
+
+			if (pev->weapons == 3)
 			{
 				ShootSaw();
 
@@ -1204,23 +1274,25 @@ void CHGruntAlly :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/saw_fire2.wav", 1, ATTN_NORM);
 				}
 			}
-			if (pev->weapons == 2)
-			{
-				Shotgun( );
 
-				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sbarrel1.wav", 1, ATTN_NORM );
-			}
 			if (pev->weapons == 4)
 			{
 				ShootRifle();
 
 				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sniper_fire.wav", 1, ATTN_NORM);
 			}
+
 			if (pev->weapons == 5)
 			{
 				ShootRpg();
 
 				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/rocketfire1.wav", 1, ATTN_NORM);
+			}
+			if (pev->weapons == 6)
+			{
+				ShootAR();
+
+				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/556ar_shoot.wav", 1, ATTN_NORM);
 			}
 		
 			CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, 384, 0.3 );
@@ -1277,7 +1349,7 @@ void CHGruntAlly :: Spawn()
 {
 	Precache( );
 
-	SET_MODEL(ENT(pev), "models/hgrunt_opfor.mdl");
+	SET_MODEL(ENT(pev), "models/hgrunt.mdl");
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 
 	pev->solid			= SOLID_SLIDEBOX;
@@ -1314,82 +1386,102 @@ void CHGruntAlly :: Spawn()
 		else ALERT(at_console, "... Won't have grenades \n");
 	}
 
-	SetBodygroup(HGruntAllyBodygroup::Weapon, m_iWeaponIdx);
-	//Note: this code has been rewritten to use SetBodygroup since it relies on hardcoded offsets in the original
-	//Let's initialise weapons!
+	if (pev->skin == -1)
+	{
+		pev->skin = RANDOM_LONG(0, 1);// pick a skin, any skin
+	}
+
 	if (pev->weapons == -1)//choose random gun
 	{
-		pev->weapons = RANDOM_LONG(0, 5);
+		int RandomGun = RANDOM_LONG(0, 5);
+		pev->weapons = RandomGun;
 	}
 
-	if( pev->weapons == 0 )
+	if (pev->weapons == 0 || pev->weapons == 1)//mp5
 	{
-		SetBodygroup(HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::MP5);
-		m_iGruntHead = RANDOM_LONG(0, 19);
-		m_iWeaponIdx = HGruntAllyWeapon::MP5;
-		m_cClipSize = GRUNT_MP5_CLIP_SIZE;
+		SetBodygroup(HGruntBodygroup::Weapon, Weapon::MP5_gl);
+		m_iWeaponIdx = Weapon::MP5_gl;
+		if (m_iGruntHead == Head::Random)
+		{
+			m_iGruntHead = RANDOM_LONG(0, 19);
+		}
+		m_cClipSize = 30;
 	}
-	if (pev->weapons == 1)
+
+	if (pev->weapons == 2 || pev->weapons == 8 || pev->weapons == 10)//shotgun
 	{
-		SetBodygroup(HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::MP5_GL);
-		m_iGruntHead = RANDOM_LONG(0, 19);
-		m_iWeaponIdx = HGruntAllyWeapon::MP5_GL;
-		m_cClipSize = GRUNT_MP5_CLIP_SIZE;
+		pev->weapons = 2;
+		m_iWeaponIdx = Weapon::Shotgun;
+		if (m_iGruntHead == Head::Random)
+		{
+			m_iGruntHead = Head::Skimask;
+		}
+		m_cClipSize = 8;
 	}
-	if( pev->weapons == 2 )
+
+	if (pev->weapons == 3)//saw
 	{
-		SetBodygroup(HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::Shotgun);
-		SetBodygroup(HGruntAllyBodygroup::Head, HGruntAllyHead::Skimask);
-		m_iGruntHead = HGruntAllyHead::Skimask;
-		m_cClipSize = GRUNT_SHOTGUN_CLIP_SIZE;
-		m_iWeaponIdx = HGruntAllyWeapon::Shotgun;
+		m_iWeaponIdx = Weapon::Saw;
+		if (m_iGruntHead == Head::Random)
+		{
+			m_iGruntHead = RANDOM_LONG(0, 3) + 10;
+		}
+		m_cClipSize = 50;
 	}
-	if( pev->weapons == 3 )
+
+	if (pev->weapons == 4)//rifle
 	{
-		SetBodygroup(HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::Saw);
-		m_iWeaponIdx = HGruntAllyWeapon::Saw;
-		m_iGruntHead = RANDOM_LONG(0, 3) + 10;
-		m_cClipSize = GRUNT_SAW_CLIP_SIZE;
-	}
-	if (pev->weapons == 4)
-	{
-		SetBodygroup(HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::Sniper);
-		m_iWeaponIdx = HGruntAllyWeapon::Sniper;
-		m_iGruntHead = RANDOM_LONG(0, 5) + 14;
+		m_iWeaponIdx = Weapon::Sniper;
+		if (m_iGruntHead == Head::Random)
+		{
+			m_iGruntHead = RANDOM_LONG(0, 2) + 20;
+		}
 		m_cClipSize = 3;
 	}
-	if (pev->weapons == 5)
+
+	if (pev->weapons == 5)//rpg
 	{
-		SetBodygroup(HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::Rpg);
-		m_iWeaponIdx = HGruntAllyWeapon::Rpg;
-		m_iGruntHead = RANDOM_LONG(0, 1) + 18;
+		m_iWeaponIdx = Weapon::RPG;
+		if (m_iGruntHead == Head::Random)
+		{
+			m_iGruntHead = RANDOM_LONG(0, 1) + 18;
+		}
 		m_cClipSize = 1;
 	}
-	if (pev->weapons == 6)
+	if (pev->weapons == 6)//SG550
 	{
-		m_iWeaponIdx = HGruntAllyWeapon::None;
-		m_cClipSize = 0;
+		m_iWeaponIdx = Weapon::SG550;
+		if (m_iGruntHead == Head::Random)
+		{
+			m_iGruntHead = RANDOM_LONG(0, 2) + 20;
+		}
+		m_cClipSize = 20;
 	}
 
+	if (pev->weapons == 7)//unarmed
+	{
+		m_iWeaponIdx = Weapon::None;
+		if (m_iGruntHead == Head::Random)
+		{
+			m_iGruntHead = RANDOM_LONG(0, 22);
+		}
+		m_cClipSize = 9999;
+	}
+
+	if (pev->spawnflags & SF_SQUADMONSTER_LEADER)
+	{
+		m_iGruntHead = RANDOM_LONG(0, 4) + 3;
+	}
+
+	SetBodygroup(HGruntBodygroup::Weapon, m_iWeaponIdx);
+	SetBodygroup(HGruntBodygroup::Head, m_iGruntHead);
 	m_cAmmoLoaded = m_cClipSize;
-
-	if( pev->spawnflags & SF_SQUADMONSTER_LEADER )
-	{
-		m_iGruntHead = RANDOM_LONG(0,4) + 3;
-	}
-
-	SetBodygroup( HGruntAllyBodygroup::Head, m_iGruntHead );
 	
 
 	//TODO: probably also needs this for head HGruntAllyHead::BeretBlack
 	if (pev->skin == 1)
 	{
 		m_voicePitch = 95;
-	}
-
-	if (m_iGruntHead <= 1 || m_iGruntHead >= 8 && m_iGruntHead <= 9 || m_iGruntHead >= 14)//bullshit check, but I can't think of a better way
-	{
-		m_hasHelmet = TRUE;
 	}
 
 	m_iSawShell = PRECACHE_MODEL( "models/saw_shell.mdl" );
@@ -1440,6 +1532,8 @@ void CHGruntAlly :: Precache()
 	PRECACHE_SOUND( "weapons/glauncher.wav" );
 
 	PRECACHE_SOUND( "weapons/sbarrel1.wav" );
+
+	PRECACHE_SOUND("weapons/556ar_shoot.wav");
 
 	PRECACHE_SOUND( "fgrunt/medic.wav" );
 
@@ -2344,30 +2438,30 @@ void CHGruntAlly :: SetActivity ( Activity NewActivity )
 	{
 	case ACT_RANGE_ATTACK1:
 		// grunt is either shooting standing or shooting crouched
-		if (pev->weapons == 0 || pev->weapons == 1)
+		if (pev->weapons == 1 || pev->weapons == 0 || pev->weapons == 3 || pev->weapons == 6)
 		{
-			if ( m_fStanding )
+			if (m_fStanding)
 			{
 				// get aimable sequence
-				iSequence = LookupSequence( "standing_mp5" );
+				iSequence = LookupSequence("standing_mp5");
 			}
 			else
 			{
 				// get crouching shoot
-				iSequence = LookupSequence( "crouching_mp5" );
+				iSequence = LookupSequence("crouching_mp5");
 			}
 		}
-		else if( pev->weapons == 3 )
+		if (pev->weapons == 2)
 		{
-			if( m_fStanding )
+			if (m_fStanding)
 			{
 				// get aimable sequence
-				iSequence = LookupSequence( "standing_saw" );
+				iSequence = LookupSequence("standing_shotgun");
 			}
 			else
 			{
 				// get crouching shoot
-				iSequence = LookupSequence( "crouching_saw" );
+				iSequence = LookupSequence("crouching_shotgun");
 			}
 		}
 		if (pev->weapons == 4)
@@ -2384,19 +2478,7 @@ void CHGruntAlly :: SetActivity ( Activity NewActivity )
 			}
 
 		}
-		if (pev->weapons == 2)
-		{
-			if ( m_fStanding )
-			{
-				// get aimable sequence
-				iSequence = LookupSequence( "standing_shotgun" );
-			}
-			else
-			{
-				// get crouching shoot
-				iSequence = LookupSequence( "crouching_shotgun" );
-			}
-		}
+
 		if (pev->weapons == 5)
 		{
 
@@ -3201,8 +3283,9 @@ void CHGruntAllyRepel::KeyValue( KeyValueData *pkvd )
 
 void CHGruntAllyRepel::Spawn()
 {
-	Precache( );
+	Precache();
 	pev->solid = SOLID_NOT;
+	pev->weapons = 0;
 
 	if (m_SpawnChance <= 0 || m_SpawnChance > 100)
 	{
@@ -3214,32 +3297,19 @@ void CHGruntAllyRepel::Spawn()
 		UTIL_Remove(this);
 	}
 
-	if (pev->weapons == 0)
-	{
-		SetBodygroup(HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::MP5);
-		m_iWeaponIdx = HGruntAllyWeapon::MP5;
-	}
-	else if (pev->weapons == 1)
-	{
-		SetBodygroup(HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::MP5_GL);
-		m_iWeaponIdx = HGruntAllyWeapon::MP5_GL;
-	}
-	else
-	{
-		SetBodygroup(HGruntAllyBodygroup::Weapon, pev->weapons);// just take the "weapons" value
-		m_iWeaponIdx = pev->weapons;
-	}
-
 	if (pev->skin == -1)
 	{
 		pev->skin = RANDOM_LONG(0, 1);// pick a skin, any skin
 	}
-	if (m_iGruntHead == HGruntAllyHead::Random)
+	if (m_iGruntHead == Head::Random)
 	{
 		m_iGruntHead = RANDOM_LONG(0, 19);
 	}
 
-	SetBodygroup(HGruntAllyBodygroup::Head, m_iGruntHead);
+	SetBodygroup(HGruntBodygroup::Weapon, Weapon::MP5_gl);
+	m_iWeaponIdx = Weapon::MP5_gl;
+
+	SetBodygroup(HGruntBodygroup::Head, m_iGruntHead);
 
 	SetUse( &CHGruntAllyRepel::RepelUse );
 }
@@ -3278,6 +3348,7 @@ void CHGruntAllyRepel::RepelUse ( CBaseEntity *pActivator, CBaseEntity *pCaller,
 			| SF_SQUADMONSTER_DONTDROPGUN );
 
 		pGrunt->m_iGruntHead = m_iGruntHead;
+		pGrunt->pev->skin = pev->skin;
 		pGrunt->m_iWeaponIdx = m_iWeaponIdx;
 		pGrunt->m_iszUse = m_iszUse;
 		pGrunt->m_iszUnUse = m_iszUnUse;
@@ -3369,24 +3440,24 @@ void CDeadHGruntAlly:: Spawn()
 		m_iGruntHead = RANDOM_LONG(0, 20);
 	}
 
-	if( pev->weapons == 0 )
+	// choose random body and skin
+	if (pev->weapons == 0 || pev->weapons == 1)
 	{
-		SetBodygroup( HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::MP5 );
+		SetBodygroup(HGruntBodygroup::Weapon, Weapon::MP5_gl);
 	}
-	else if( pev->weapons == 2 )
+	if (pev->weapons == 6)
 	{
-		SetBodygroup( HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::Shotgun );
+		SetBodygroup(HGruntBodygroup::Weapon, Weapon::SG550);
 	}
-	else if( pev->weapons == 3 )
+	if (pev->weapons == 7)
 	{
-		SetBodygroup( HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::Saw );
+		SetBodygroup(HGruntBodygroup::Weapon, Weapon::None);
 	}
 	else
 	{
-		SetBodygroup( HGruntAllyBodygroup::Weapon, HGruntAllyWeapon::None );
+		SetBodygroup(HGruntBodygroup::Weapon, pev->weapons);// just take the "weapons" value
 	}
-
-	SetBodygroup( HGruntAllyBodygroup::Head, m_iGruntHead );
+	SetBodygroup(HGruntBodygroup::Head, m_iGruntHead);
 
 	if (pev->skin = -1)
 	{

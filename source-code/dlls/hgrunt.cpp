@@ -92,7 +92,9 @@ namespace Head
 		Medic2,
 		Engi,
 		Engi2,
-		Rookie
+		Rookie,
+		Spec,
+		Legend,
 	};
 }
 
@@ -101,7 +103,7 @@ namespace Weapon
 	enum Weapon
 	{
 		MP5_gl = 0,
-		M4,
+		SG550,
 		Shotgun,
 		Saw,
 		Sniper,
@@ -117,7 +119,7 @@ namespace Weapon
 //=========================================================
 // monster-specific DEFINE's
 //=========================================================
-#define	GRUNT_CLIP_SIZE					36 // how many bullets in a clip? - NOTE: 3 round burst sound, so keep as 3 * x!
+#define	GRUNT_CLIP_SIZE					30 // how many bullets in a clip? - NOTE: 3 round burst sound, so keep as 3 * x!
 #define GRUNT_VOL						0.35		// volume of grunt sounds
 #define GRUNT_ATTN						ATTN_NORM	// attenutation of grunt sentences
 #define HGRUNT_LIMP_HEALTH				20
@@ -130,9 +132,9 @@ namespace Weapon
 #define HGRUNT_MP5_LAUNCHER 1;//MP5 + grenade launcher
 #define HGRUNT_SHOTGUN 2;//Shotgun
 #define HGRUNT_SAW 3;//M-Gun
-#define HGRUNT_SNIPER 4;//M40A1
+#define HGRUNT_SNIPER 4;//SG5500A1
 #define HGRUNT_RPG 5;//Rocket launcher
-#define HGRUNT_M4 6;//Assault Rifle
+#define HGRUNT_SG550 6;//Assault Rifle
 #define HGRUNT_NOGUN 7;//No weapon equiped
 
 
@@ -372,15 +374,6 @@ void CHGrunt :: GibMonster ()
 	if (pev->spawnflags & SF_SQUADMONSTER_DONTDROPGUN)
 	{
 		CGib::SpawnHeadGib(pev);// throw the infamous leg
-		if (m_iGruntHead == Head::Gasmask || m_iGruntHead == Head::Gasmask)
-		{
-			CGib::SpawnRandomGibs(pev, 1, HECUGibGasmask);
-		}
-		if (m_iGruntHead == Head::Comm_redberet || m_iGruntHead == Head::Comm_redberet2)
-		{
-			CGib::SpawnRandomGibs(pev, 1, HECUGibBeret);
-		}
-		else
 		CBaseMonster::GibMonster();
 		return;
 	}
@@ -406,7 +399,7 @@ void CHGrunt :: GibMonster ()
 			{
 				pGun = DropItem("weapon_rpg", vecGunPos, vecGunAngles);
 			}
-			if (pev->weapons == 6)//m4
+			if (pev->weapons == 6)//SG550
 			{
 				pGun = DropItem("weapon_assaultrifle", vecGunPos, vecGunAngles);
 			}
@@ -428,7 +421,7 @@ void CHGrunt :: GibMonster ()
 			pev->weapons = HGRUNT_NOGUN;
 		}
 	CGib::SpawnHeadGib(pev);// throw the infamous leg
-	if (m_iGruntHead == Head::Gasmask || m_iGruntHead == Head::Gasmask)
+	if (m_iGruntHead == Head::Gasmask || m_iGruntHead == Head::Gasmask2)
 	{
 		CGib::SpawnRandomGibs(pev, 1, HECUGibGasmask);
 	}
@@ -1079,7 +1072,7 @@ void CHGrunt::ShootRpg()
 }
 
 //=========================================================
-// Shoot M4A1
+// Shoot SG550A1
 //=========================================================
 void CHGrunt::ShootAR()
 {
@@ -1169,7 +1162,6 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 					DropItem("weapon_9mmAR", vecGunPos, vecGunAngles);
 				}
 				pev->weapons = HGRUNT_NOGUN;
-				break;
 			}
 
 			}
@@ -1268,7 +1260,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			{
 				ShootAR();
 
-				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/ars1.wav", 1, ATTN_NORM);
+				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/556ar_shoot.wav", 1, ATTN_NORM);
 			}
 		
 			CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, 384, 0.3 );
@@ -1279,7 +1271,14 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case HGRUNT_AE_BURST3:
 			if (g_iSkillLevel == SKILL_HARDEST)
 				pev->framerate = 1.6;
-			Shoot();
+			if (pev->weapons == 0 || pev->weapons == 1)
+			{
+				Shoot();
+			}
+			else if (pev->weapons == 3)
+			{
+				ShootSaw();
+			}
 			break;
 
 		case HGRUNT_AE_KICK:
@@ -1381,7 +1380,7 @@ void CHGrunt :: Spawn()
 		m_iWeaponIdx = Weapon::MP5_gl;
 		if (m_iGruntHead == Head::Random)
 		{
-			m_iGruntHead = RANDOM_LONG(0, 20);
+			m_iGruntHead = RANDOM_LONG(0, 19);
 		}
 		m_cClipSize = GRUNT_CLIP_SIZE;
 	}
@@ -1412,7 +1411,7 @@ void CHGrunt :: Spawn()
 		m_iWeaponIdx = Weapon::Sniper;
 		if (m_iGruntHead == Head::Random)
 		{
-			m_iGruntHead = RANDOM_LONG(0, 6) + 14;
+			m_iGruntHead = RANDOM_LONG(0, 2) + 20;
 		}
 		m_cClipSize = 3;
 	}
@@ -1426,12 +1425,12 @@ void CHGrunt :: Spawn()
 		}
 		m_cClipSize = 1;
 	}
-	if (pev->weapons == 6)//m4
+	if (pev->weapons == 6)//SG550
 	{
-		m_iWeaponIdx = Weapon::M4;
+		m_iWeaponIdx = Weapon::SG550;
 		if (m_iGruntHead == Head::Random)
 		{
-			m_iGruntHead = RANDOM_LONG(0, 20);
+			m_iGruntHead = RANDOM_LONG(0, 2) + 20;
 		}
 		m_cClipSize = 20;
 	}
@@ -1441,7 +1440,7 @@ void CHGrunt :: Spawn()
 		m_iWeaponIdx = Weapon::None;
 		if (m_iGruntHead == Head::Random)
 		{
-			m_iGruntHead = RANDOM_LONG(0, 20);
+			m_iGruntHead = RANDOM_LONG(0, 22);
 		}
 		m_cClipSize = 9999;
 	}
@@ -1454,10 +1453,6 @@ void CHGrunt :: Spawn()
 	SetBodygroup(HGruntBodygroup::Weapon, m_iWeaponIdx);
 	SetBodygroup(HGruntBodygroup::Head, m_iGruntHead);
 
-	if (m_iGruntHead <= 1 || m_iGruntHead >= 8 && m_iGruntHead <= 9 || m_iGruntHead >= 14)//bullshit check, but I can't think of a better way
-	{
-		m_hasHelmet = TRUE;
-	}
 	m_cAmmoLoaded		= m_cClipSize;
 
 
@@ -1498,6 +1493,7 @@ void CHGrunt :: Precache()
 	PRECACHE_SOUND("weapons/saw_fire2.wav");
 	PRECACHE_SOUND("weapons/saw_fire1.wav");
 	PRECACHE_SOUND( "weapons/sbarrel1.wav" );
+	PRECACHE_SOUND( "weapons/556ar_shoot.wav" );
 
 	PRECACHE_SOUND("common/boots_heavy1.wav");
 	PRECACHE_SOUND("common/boots_heavy3.wav");
@@ -2328,7 +2324,7 @@ void CHGrunt :: SetActivity ( Activity NewActivity )
 	{
 	case ACT_RANGE_ATTACK1:
 		// grunt is either shooting standing or shooting crouched
-		if (pev->weapons == 1 || pev->weapons == 0 || pev->weapons == 3)
+		if (pev->weapons == 1 || pev->weapons == 0 || pev->weapons == 3 || pev->weapons == 6)
 		{
 			if ( m_fStanding )
 			{
@@ -3043,7 +3039,7 @@ void CDeadHGrunt :: Spawn()
 	}
 	if (pev->weapons == 6)
 	{
-		SetBodygroup(HGruntBodygroup::Weapon, Weapon::M4);
+		SetBodygroup(HGruntBodygroup::Weapon, Weapon::SG550);
 	}
 	if (pev->weapons == 7)
 	{
