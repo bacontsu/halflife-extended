@@ -236,6 +236,12 @@ int CAGrunt :: ISoundMask ()
 //=========================================================
 void CAGrunt :: TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType)
 {
+	if (pev->weapons == AGRUNT_NAKED)
+	{
+		CSquadMonster::TraceAttack(pevAttacker, flDamage, vecDir, ptr, bitsDamageType);
+		return;
+	}
+
 	if ( ptr->iHitgroup == 10 && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB)))
 	{
 		// hit armor
@@ -606,12 +612,14 @@ void CAGrunt :: Spawn()
 void CAGrunt :: Precache()
 {
 	int i;
-	if (pev->weapons == AGRUNT_HIVEHAND)
+	
 		PRECACHE_MODEL("models/agrunt.mdl");
 	if (pev->weapons == AGRUNT_FIREBALL)
 		PRECACHE_MODEL("models/agrunt_2.mdl");
 	if (pev->weapons == AGRUNT_PLASMARIFLE)
 		PRECACHE_MODEL("models/agrunt_3.mdl");
+	if (pev->weapons == AGRUNT_NAKED)
+		PRECACHE_MODEL("models/agrunt_noarmor.mdl");
 	
 
 	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
@@ -936,10 +944,14 @@ BOOL CAGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
 //=========================================================
 BOOL CAGrunt :: CheckRangeAttack1 ( float flDot, float flDist )
 {
+
 	if ( gpGlobals->time < m_flNextHornetAttackCheck )
 	{
 		return m_fCanHornetAttack;
 	}
+
+	if (pev->weapons == AGRUNT_NAKED)
+		return FALSE;
 
 	if ( HasConditions( bits_COND_SEE_ENEMY ) && flDist >= AGRUNT_MELEE_DIST && flDist <= 1024 && flDot >= 0.5 && NoFriendlyFire() )
 	{
