@@ -33,6 +33,9 @@
 
 extern DLL_GLOBAL int  g_iSkillLevel;
 
+#define HASS_GLOCK		(0)
+#define HASS_CROSSBOW	(1)
+
 //=========================================================
 // monster-specific schedule types
 //=========================================================
@@ -72,7 +75,12 @@ public:
 	void SetYawSpeed () override;
 	int  Classify () override;
 	int  ISoundMask () override;
+
+	void Killed(entvars_t* pevAttacker, int iGib);
+
 	void Shoot();
+	void ShootCrossbow();
+
 	void HandleAnimEvent( MonsterEvent_t *pEvent ) override;
 	Schedule_t* GetSchedule () override;
 	Schedule_t* GetScheduleOfType ( int Type ) override;
@@ -106,6 +114,8 @@ public:
 	int		m_iFrustration;
 
 	int		m_iShell;
+
+
 };
 LINK_ENTITY_TO_CLASS( monster_human_assassin, CHAssassin );
 
@@ -128,6 +138,26 @@ TYPEDESCRIPTION	CHAssassin::m_SaveData[] =
 
 IMPLEMENT_SAVERESTORE( CHAssassin, CBaseMonster );
 
+void CHAssassin::Killed(entvars_t* pevAttacker, int iGib)
+{
+	Vector	vecGunPos;
+	Vector	vecGunAngles;
+
+	GetAttachment(0, vecGunPos, vecGunAngles);
+
+	if (pev->weapons == HASS_CROSSBOW)
+	{
+		DropItem("weapon_crossbow", vecGunPos, vecGunAngles);
+		pev->body = 3;
+	}
+	if (pev->weapons == HASS_GLOCK)
+	{
+		DropItem("weapon_9mmhandgun", vecGunPos, vecGunAngles);
+		pev->body = 2;
+	}
+
+	CBaseMonster::Killed(pevAttacker, iGib);
+}
 
 //=========================================================
 // DieSound
@@ -236,6 +266,54 @@ void CHAssassin :: Shoot ()
 
 	m_cAmmoLoaded--;
 }
+//=========================================================
+// Shoot Crossbow
+//=========================================================
+void CHAssassin::ShootCrossbow()
+{
+	if (m_hEnemy == NULL)
+	{
+		return;
+	}
+
+	Vector vecShootOrigin = GetGunPosition();
+	Vector vecShootDir = ShootAtEnemy(vecShootOrigin);
+
+	// delete this when a separate crossbow firing anim is ready
+	if (m_flLastShot + 1 > gpGlobals->time)
+	{
+		m_flLastShot = gpGlobals->time;
+		return;
+	}
+
+	UTIL_MakeVectors(pev->angles);
+
+	CCrossbowBolt* pBolt = CCrossbowBolt::BoltCreate();
+	pBolt->pev->origin = vecShootOrigin;
+	pBolt->pev->angles = gpGlobals->v_forward;
+	pBolt->pev->owner = edict();
+
+	if (pev->waterlevel == 3)
+	{
+		pBolt->pev->velocity = vecShootDir * 1000;
+		pBolt->pev->speed = 1000;
+	}
+	else
+	{
+		pBolt->pev->velocity = vecShootDir * 2000;
+		pBolt->pev->speed = 2000;
+	}
+	pBolt->pev->avelocity.z = 10;
+
+
+	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/xbow_fire1.wav", RANDOM_FLOAT(0.6, 0.8), ATTN_NORM);
+
+	Vector angDir = UTIL_VecToAngles(vecShootDir);
+	SetBlending(0, angDir.x);
+
+	m_flLastShot = gpGlobals->time;
+	m_cAmmoLoaded--;
+}
 
 
 //=========================================================
@@ -249,7 +327,9 @@ void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	switch( pEvent->event )
 	{
 	case ASSASSIN_AE_SHOOT1:
-		Shoot( );
+		if (pev->weapons == HASS_CROSSBOW)
+			ShootCrossbow();
+		else Shoot();
 		break;
 	case ASSASSIN_AE_TOSS1:
 		{
@@ -303,6 +383,14 @@ void CHAssassin :: Spawn()
 	pev->renderamt		= 20;
 	pev->rendermode		= kRenderTransTexture;
 
+	// for testing only
+	//pev->weapons = HASS_CROSSBOW;
+
+	if (pev->weapons == HASS_GLOCK)
+		pev->body = 0;// holstered bow, uholstered pistol
+	if (pev->weapons == HASS_CROSSBOW)
+		pev->body = 1;// holstered pistol, uholstered bow
+
 	MonsterInit();
 }
 
@@ -315,6 +403,7 @@ void CHAssassin :: Precache()
 
 	PRECACHE_SOUND("weapons/pl_gun1.wav");
 	PRECACHE_SOUND("weapons/pl_gun2.wav");
+	PRECACHE_SOUND("weapons/xbow_fire1.wav");
 
 	PRECACHE_SOUND("debris/beamstart1.wav");
 
@@ -658,6 +747,9 @@ BOOL CHAssassin :: CheckMeleeAttack1 ( float flDot, float flDist )
 //=========================================================
 BOOL CHAssassin :: CheckRangeAttack1 ( float flDot, float flDist )
 {
+	if (pev->weapons == HASS_CROSSBOW && m_flLastShot + 1 > gpGlobals->time)
+		return FALSE;
+
 	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist > 64 && flDist <= 2048 /* && flDot >= 0.5 */ /* && NoFriendlyFire() */ )
 	{
 		TraceResult	tr;
