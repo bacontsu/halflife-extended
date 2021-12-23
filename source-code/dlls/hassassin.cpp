@@ -89,6 +89,7 @@ public:
 	BOOL CheckRangeAttack1 ( float flDot, float flDist ) override;	// shoot
 	BOOL CheckRangeAttack2 ( float flDot, float flDist ) override;	// throw grenade
 	void StartTask ( Task_t *pTask ) override;
+	void SetActivity(Activity NewActivity) override;
 	void RunAI() override;
 	void RunTask ( Task_t *pTask ) override;
 	void DeathSound () override;
@@ -114,6 +115,9 @@ public:
 	int		m_iFrustration;
 
 	int		m_iShell;
+
+	BOOL	m_fStanding;
+	int		m_cClipSize;
 
 
 };
@@ -155,6 +159,8 @@ void CHAssassin::Killed(entvars_t* pevAttacker, int iGib)
 		DropItem("weapon_9mmhandgun", vecGunPos, vecGunAngles);
 		pev->body = 2;
 	}
+
+	pev->weapons = -1;
 
 	CBaseMonster::Killed(pevAttacker, iGib);
 }
@@ -279,13 +285,6 @@ void CHAssassin::ShootCrossbow()
 	Vector vecShootOrigin = GetGunPosition();
 	Vector vecShootDir = ShootAtEnemy(vecShootOrigin);
 
-	// delete this when a separate crossbow firing anim is ready
-	if (m_flLastShot + 1 > gpGlobals->time)
-	{
-		m_flLastShot = gpGlobals->time;
-		return;
-	}
-
 	UTIL_MakeVectors(pev->angles);
 
 	CCrossbowBolt* pBolt = CCrossbowBolt::BoltCreate();
@@ -384,12 +383,22 @@ void CHAssassin :: Spawn()
 	pev->rendermode		= kRenderTransTexture;
 
 	// for testing only
-	//pev->weapons = HASS_CROSSBOW;
+	pev->weapons = HASS_CROSSBOW;
 
 	if (pev->weapons == HASS_GLOCK)
+	{
 		pev->body = 0;// holstered bow, uholstered pistol
+		m_cClipSize = 12;
+	}
+		
 	if (pev->weapons == HASS_CROSSBOW)
+	{
 		pev->body = 1;// holstered pistol, uholstered bow
+		m_cClipSize = 5;
+	}
+		
+
+	m_cAmmoLoaded = m_cClipSize;
 
 	MonsterInit();
 }
@@ -406,6 +415,9 @@ void CHAssassin :: Precache()
 	PRECACHE_SOUND("weapons/xbow_fire1.wav");
 
 	PRECACHE_SOUND("debris/beamstart1.wav");
+
+	PRECACHE_SOUND("common/step1.wav");
+	PRECACHE_SOUND("common/step2.wav");
 
 	m_iShell = PRECACHE_MODEL ("models/shell.mdl");// brass shell
 }	
@@ -712,6 +724,8 @@ DEFINE_CUSTOM_SCHEDULES( CHAssassin )
 IMPLEMENT_CUSTOM_SCHEDULES( CHAssassin, CBaseMonster );
 
 
+
+
 //=========================================================
 // CheckMeleeAttack1 - jump like crazy if the enemy gets too close. 
 //=========================================================
@@ -839,12 +853,10 @@ void CHAssassin :: RunAI()
 		iStep = ! iStep;
 		if (iStep)
 		{
-			switch( RANDOM_LONG( 0, 3 ) )
+			switch( RANDOM_LONG( 0, 1 ) )
 			{
-			case 0:	EMIT_SOUND( ENT(pev), CHAN_BODY, "player/pl_step1.wav", 0.5, ATTN_NORM);	break;
-			case 1:	EMIT_SOUND( ENT(pev), CHAN_BODY, "player/pl_step3.wav", 0.5, ATTN_NORM);	break;
-			case 2:	EMIT_SOUND( ENT(pev), CHAN_BODY, "player/pl_step2.wav", 0.5, ATTN_NORM);	break;
-			case 3:	EMIT_SOUND( ENT(pev), CHAN_BODY, "player/pl_step4.wav", 0.5, ATTN_NORM);	break;
+			case 0:	EMIT_SOUND( ENT(pev), CHAN_BODY, "common/step1.wav", 0.5, ATTN_NORM);	break;
+			case 1:	EMIT_SOUND( ENT(pev), CHAN_BODY, "common/step2.wav", 0.5, ATTN_NORM);	break;
 			}
 		}
 	}
@@ -896,12 +908,16 @@ void CHAssassin :: RunTask ( Task_t *pTask )
 			}
 			else if (HasConditions ( bits_COND_SEE_ENEMY ))
 			{
-				pev->sequence = LookupSequence( "fly_attack" );
+				if (pev->weapons == HASS_GLOCK)
+					pev->sequence = LookupSequence( "fly_attack" );
+				else pev->sequence = LookupSequence("fly_attack_cb");
 				pev->frame = 0;
 			}
 			else
 			{
-				pev->sequence = LookupSequence( "fly_down" );
+				if (pev->weapons == HASS_GLOCK)
+					pev->sequence = LookupSequence( "fly_down" );
+				else pev->sequence = LookupSequence("fly_down_cb");
 				pev->frame = 0;
 			}
 			
@@ -1105,6 +1121,109 @@ Schedule_t* CHAssassin :: GetScheduleOfType ( int Type )
 	}
 
 	return CBaseMonster :: GetScheduleOfType( Type );
+}
+
+//=========================================================
+// SetActivity 
+//=========================================================
+void CHAssassin::SetActivity(Activity NewActivity)
+{
+	int	iSequence = -1;
+	void* pmodel = GET_MODEL_PTR(ENT(pev));
+
+	switch (NewActivity)
+	{
+	case ACT_RANGE_ATTACK1:
+		// grunt is either shooting standing or shooting crouched
+		if (RANDOM_LONG(0, 9) == 0)
+			m_fStanding = RANDOM_LONG(0, 1);
+
+		if (pev->weapons == HASS_GLOCK)
+		{
+			if (m_fStanding)
+			{
+				// get aimable sequence
+				iSequence = LookupSequence("shootstand");
+			}
+			else
+			{
+				// get crouching shoot
+				iSequence = LookupSequence("shoot");
+			}
+		}
+		if (pev->weapons == HASS_CROSSBOW)
+		{
+			if (m_fStanding)
+			{
+				// get aimable sequence
+				iSequence = LookupSequence("shootstandCB");
+			}
+			else
+			{
+				// get crouching shoot
+				iSequence = LookupSequence("shootCB");
+			}
+		}
+		
+		break;
+	case ACT_RELOAD:
+		if (pev->weapons == HASS_CROSSBOW)
+		{
+			// get crossbow reload
+			iSequence = LookupSequence("crossbow_reload");
+		}
+		else
+		{
+			// get pistol reload
+			iSequence = LookupSequence("glock_reload");
+		}
+		break;
+	case ACT_RUN:
+		if (pev->weapons == HASS_CROSSBOW)
+		{
+			// get crossbow run
+			iSequence = LookupSequence("run_cb");
+		}
+		else
+		{
+			// get pistol run
+			iSequence = LookupSequence("run");
+		}
+		break;
+
+	case ACT_IDLE:
+		if (pev->weapons == HASS_CROSSBOW)
+		{
+			// get crossbow reload
+			iSequence = LookupSequence("idle2_cb");
+		}
+		break;
+
+	default:
+		iSequence = LookupActivity(NewActivity);
+		break;
+	}
+
+	m_Activity = NewActivity; // Go ahead and set this so it doesn't keep trying when the anim is not present
+
+	// Set to the desired anim, or default anim if the desired is not present
+	if (iSequence > -1)
+	{
+		if (pev->sequence != iSequence || !m_fSequenceLoops)
+		{
+			pev->frame = 0;
+		}
+
+		pev->sequence = iSequence;	// Set to the reset anim (if it's there)
+		ResetSequenceInfo();
+		SetYawSpeed();
+	}
+	else
+	{
+		// Not available try to get default anim
+		ALERT(at_console, "%s has no sequence for act:%d\n", STRING(pev->classname), NewActivity);
+		pev->sequence = 0;	// Set to the reset anim (if it's there)
+	}
 }
 
 #endif
