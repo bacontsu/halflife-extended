@@ -51,6 +51,24 @@ int CHud::MsgFunc_WaterSplash(const char* pszName, int iSize, void* pbuf)
 
 	EV_HLDM_WaterSplash(X, Y, Z);
 	return 1;
+
+}
+
+
+extern void EV_HLDM_DropMag(float x, float y, float z, int body);
+
+int CHud::MsgFunc_DropMag(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	float X, Y, Z;
+	int body;
+	X = READ_COORD();
+	Y = READ_COORD();
+	Z = READ_COORD();
+	body = READ_BYTE();
+
+	EV_HLDM_DropMag(X, Y, Z, body);
+	return 1;
 }
 
 

@@ -122,6 +122,18 @@ void CM249::WeaponIdle()
 
 		pev->body = 0;
 
+#ifndef CLIENT_DLL
+		extern int	gmsgDropMag;
+		MESSAGE_BEGIN(MSG_ALL, gmsgDropMag);
+		WRITE_COORD(pev->origin.x);
+		WRITE_COORD(pev->origin.y);
+		WRITE_COORD(pev->origin.z);
+		WRITE_BYTE(4);
+		MESSAGE_END();
+
+#endif
+
+
 		SendWeaponAnim( M249_RELOAD_END, pev->body );
 	}
 

@@ -501,6 +501,18 @@ void EV_HLDM_FireBullets(int idx, float* forward, float* right, float* up, int c
 	}
 }
 
+//drop mag
+void EV_HLDM_DropMag(float x, float y, float z, int body)
+{
+	int gibz = gEngfuncs.pEventAPI->EV_FindModelIndex("models/w_item_gibs.mdl");// brass shell
+	Vector endpos;
+	VectorClear(endpos);
+	endpos[1] = RANDOM_LONG(0, 255);
+	TEMPENTITY* a = gEngfuncs.pEfxAPI->R_TempModel(Vector(x, y, z), Vector(0, 0, 0), endpos, 5, gibz, TE_BOUNCE_SHELL);
+	a->entity.curstate.body = body;
+}
+
+
 //======================
 //	    GLOCK START
 //======================

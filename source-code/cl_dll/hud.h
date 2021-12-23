@@ -777,7 +777,8 @@ public:
 	int  _cdecl MsgFunc_Concuss(const char* pszName, int iSize, void* pbuf);
 	void _cdecl MsgFunc_SetSkin(const char* pszName, int iSize, void* pbuf);
 	int _cdecl MsgFunc_WpnSkn(const char* pszName, int iSize, void* pbuf); //add by bacontsu
-	int _cdecl MsgFunc_WaterSplash(const char* pszName, int iSize, void* pbuf);
+	int _cdecl MsgFunc_WaterSplash(const char* pszName, int iSize, void* pbuf); //
+	int _cdecl MsgFunc_DropMag(const char* pszName, int iSize, void* pbuf);
 
 
 	// Screen information

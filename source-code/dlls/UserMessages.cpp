@@ -56,6 +56,8 @@ int gmsgGeigerRange = 0;
 int gmsgTeamNames = 0;
 int gmsgWaterSplash = 0;
 
+int gmsgDropMag = 0;
+
 
 int gmsgStatusText = 0;
 int gmsgStatusValue = 0;
@@ -124,6 +126,7 @@ void LinkUserMessages()
 	gmsgAmmoX = REG_USER_MSG("AmmoX", 2);
 	gmsgTeamNames = REG_USER_MSG("TeamNames", -1);
 	gmsgWaterSplash = REG_USER_MSG("WaterSplash", -1);
+	gmsgDropMag = REG_USER_MSG("DropMag", -1);
 	gmsgSetSkin = REG_USER_MSG("SetSkin", 1);
 	gmsgViewmodelSkin = REG_USER_MSG("WpnSkn", -1); //add by bacontsu
 
