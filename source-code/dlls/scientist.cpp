@@ -181,20 +181,16 @@ private:
 	float m_fearTime;
 };
 
+// that's a lot of entities
 LINK_ENTITY_TO_CLASS( monster_scientist, CScientist );
 LINK_ENTITY_TO_CLASS( monster_scientist_hev, CScientist );
 LINK_ENTITY_TO_CLASS(monster_rosenberg, CScientist);
-LINK_ENTITY_TO_CLASS(monster_scientist_female, CScientist);
 
 TYPEDESCRIPTION	CScientist::m_SaveData[] = 
 {
 	DEFINE_FIELD( CScientist, m_painTime, FIELD_TIME ),
 	DEFINE_FIELD( CScientist, m_healTime, FIELD_TIME ),
 	DEFINE_FIELD( CScientist, m_fearTime, FIELD_TIME ),
-
-	DEFINE_FIELD(CScientist, m_Head, FIELD_INTEGER),
-	DEFINE_FIELD(CScientist, m_Clothing, FIELD_INTEGER),
-	DEFINE_FIELD(CScientist, m_Hands, FIELD_INTEGER),
 };
 
 IMPLEMENT_SAVERESTORE( CScientist, CTalkMonster );
@@ -745,10 +741,9 @@ void CScientist :: Spawn()
 
 	if (FClassnameIs(pev, "monster_scientist_hev"))
 		SET_MODEL(ENT(pev), "models/scientist_hev.mdl");
-	if (FClassnameIs(pev, "monster_scientist_female"))
-		SET_MODEL(ENT(pev), "models/scientist_famale.mdl");
-	else
-	SET_MODEL(ENT(pev), "models/scientist.mdl");
+
+	else SET_MODEL(ENT(pev), "models/scientist.mdl");
+	
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
 
 	pev->solid			= SOLID_SLIDEBOX;
