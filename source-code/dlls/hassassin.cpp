@@ -382,9 +382,6 @@ void CHAssassin :: Spawn()
 	pev->renderamt		= 20;
 	pev->rendermode		= kRenderTransTexture;
 
-	// for testing only
-	pev->weapons = HASS_CROSSBOW;
-
 	if (pev->weapons == HASS_GLOCK)
 	{
 		pev->body = 0;// holstered bow, uholstered pistol
