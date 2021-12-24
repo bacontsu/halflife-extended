@@ -1501,7 +1501,7 @@ void CHGruntAlly :: Spawn()
 //=========================================================
 void CHGruntAlly :: Precache()
 {
-	PRECACHE_MODEL("models/hgrunt_opfor.mdl");
+	PRECACHE_MODEL("models/hgrunt.mdl");
 
 	TalkInit();
 
@@ -3416,8 +3416,8 @@ LINK_ENTITY_TO_CLASS( monster_human_grunt_ally_dead, CDeadHGruntAlly );
 //=========================================================
 void CDeadHGruntAlly:: Spawn()
 {
-	PRECACHE_MODEL("models/hgrunt_opfor.mdl");
-	SET_MODEL(ENT(pev), "models/hgrunt_opfor.mdl");
+	PRECACHE_MODEL("models/hgrunt.mdl");
+	SET_MODEL(ENT(pev), "models/hgrunt.mdl");
 
 	pev->effects		= 0;
 	pev->yaw_speed		= 8;
