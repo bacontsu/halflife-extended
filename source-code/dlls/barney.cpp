@@ -51,7 +51,8 @@ namespace BarneyHead
 		Tommy,
 		Leonel,
 		Bill,
-		Ted
+		Ted,
+		BarneyHL2,
 	};
 }
 
