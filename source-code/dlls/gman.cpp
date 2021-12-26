@@ -23,6 +23,49 @@
 #include	"weapons.h"
 #include "soundent.h"
 
+namespace GBodygroup
+{
+	enum GBodygroup
+	{
+		body,
+		hands,
+		cellphone,
+		glassses
+	};
+}
+namespace GBody
+{
+	enum GBody
+	{
+		suit,
+		casual
+	};
+}
+namespace GHands
+{
+	enum GHands
+	{
+		briefcase,
+		empty
+	};
+}
+namespace GPhone
+{
+	enum GPhone
+	{
+		empty,
+		phone,
+	};
+}
+namespace GGlasses
+{
+	enum GGlasses
+	{
+		empty,
+		glasses,
+	};
+}
+
 //=========================================================
 // Monster's Anim Events Go Here
 //=========================================================
@@ -47,6 +90,13 @@ public:
 	void TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType) override;
 
 	void PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener ) override;
+
+	void KeyValue(KeyValueData* pkvd) override;
+
+	int GHands;
+	int GBody;
+	int GGlasses;
+	int GPhone;
 
 	EHANDLE m_hPlayer;
 	EHANDLE m_hTalkTarget;
@@ -129,6 +179,20 @@ void CGMan :: Spawn()
 	pev->health			= 100;
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
+
+	if (GBody == -1)
+		GBody = RANDOM_LONG(0, 1);
+	if (GGlasses == -1)
+		GGlasses = RANDOM_LONG(0, 1);
+	if (GHands == -1)
+		GHands = RANDOM_LONG(0, 1);
+	if (GPhone == -1)
+		GPhone = RANDOM_LONG(0, 1);
+
+	SetBodygroup(GBodygroup::body, GBody);
+	SetBodygroup(GBodygroup::cellphone, GPhone);
+	SetBodygroup(GBodygroup::glassses, GGlasses);
+	SetBodygroup(GBodygroup::hands, GHands);
 
 	MonsterInit();
 }
@@ -235,4 +299,32 @@ void CGMan::PlayScriptedSentence( const char *pszSentence, float duration, float
 
 	m_flTalkTime = gpGlobals->time + duration;
 	m_hTalkTarget = pListener;
+}
+
+void CGMan::KeyValue(KeyValueData* pkvd)
+{
+	if (FStrEq("suit", pkvd->szKeyName))
+	{
+		GBody = atoi(pkvd->szValue);
+		pkvd->fHandled = true;
+	}
+	if (FStrEq("hands", pkvd->szKeyName))
+	{
+		GHands = atoi(pkvd->szValue);
+		pkvd->fHandled = true;
+	}
+	if (FStrEq("glasses", pkvd->szKeyName))
+	{
+		GGlasses = atoi(pkvd->szValue);
+		pkvd->fHandled = true;
+	}
+	if (FStrEq("phone", pkvd->szKeyName))
+	{
+		GPhone = atoi(pkvd->szValue);
+		pkvd->fHandled = true;
+	}
+	else
+	{
+		CBaseMonster::KeyValue(pkvd);
+	}
 }
