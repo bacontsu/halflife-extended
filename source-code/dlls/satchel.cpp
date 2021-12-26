@@ -29,9 +29,6 @@ class CSatchelCharge : public CGrenade
 	void Precache() override;
 	void BounceSound() override;
 
-	int	ObjectCaps() override { return CGrenade::ObjectCaps() | FCAP_IMPULSE_USE; }
-	//void PickUp(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
-
 	void EXPORT SatchelSlide( CBaseEntity *pOther );
 	void EXPORT SatchelThink();
 
@@ -46,6 +43,7 @@ LINK_ENTITY_TO_CLASS( monster_satchel, CSatchelCharge );
 //=========================================================
 void CSatchelCharge::Deactivate()
 {
+	pev->solid = SOLID_NOT;
 	UTIL_Remove( this );
 }
 
@@ -55,7 +53,7 @@ void CSatchelCharge :: Spawn()
 	Precache( );
 	// motor
 	pev->movetype = MOVETYPE_BOUNCE;
-	pev->solid = SOLID_SLIDEBOX;
+	pev->solid = SOLID_BBOX;
 
 	SET_MODEL(ENT(pev), "models/w_satchel.mdl");
 	//UTIL_SetSize(pev, Vector( -16, -16, 0), Vector(16, 16, 32));	// size of headcrab, monsters/players get blocked by this
@@ -108,12 +106,12 @@ void CSatchelCharge::SatchelSlide( CBaseEntity *pOther )
 
 void CSatchelCharge :: SatchelThink()
 {
-	StudioFrameAdvance( );
+	StudioFrameAdvance();
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	if (!IsInWorld())
 	{
-		UTIL_Remove( this );
+		UTIL_Remove(this);
 		return;
 	}
 
@@ -131,7 +129,7 @@ void CSatchelCharge :: SatchelThink()
 	else
 	{
 		pev->velocity.z -= 8;
-	}	
+	}
 }
 
 void CSatchelCharge :: Precache()
@@ -151,22 +149,6 @@ void CSatchelCharge :: BounceSound()
 	case 2:	EMIT_SOUND(ENT(pev), CHAN_VOICE, "weapons/g_bounce3.wav", 1, ATTN_NORM);	break;
 	}
 }
-
-//=========================================================
-// CTripmineGrenade - USE - pick it up and give to player
-//=========================================================
-/*void CSatchelCharge::PickUp(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
-{
-	Vector vecMineOrigin = pActivator->pev->origin;
-	Vector vecMineAngles = pActivator->pev->angles;
-
-	CBaseEntity* pMine;
-	pMine = CSatchelCharge::DropItem("weapon_satchel", vecMineOrigin, vecMineAngles);
-	pMine->pev->effects |= EF_NODRAW;
-
-	pev->solid = SOLID_NOT;
-	UTIL_Remove(this);
-}*/
 
 
 LINK_ENTITY_TO_CLASS( weapon_satchel, CSatchel );
