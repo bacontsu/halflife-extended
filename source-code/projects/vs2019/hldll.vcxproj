@@ -48,7 +48,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\..\Program Files %28x86%29\Steam\steamapps\common\Half-Life\hl_extended\dlls</OutDir>
+    <OutDir>..\..\compile</OutDir>
     <IntDir>$(Configuration)\$(ProjectName)\int\</IntDir>
     <TargetName>hlex</TargetName>
   </PropertyGroup>
@@ -126,7 +126,6 @@
     <ClCompile Include="..\..\dlls\ctf\ctfplay_gamerules.cpp" />
     <ClCompile Include="..\..\dlls\ctf\CTFSpawn.cpp" />
     <ClCompile Include="..\..\dlls\envmodel.cpp" />
-    <ClCompile Include="..\..\dlls\env_tv.cpp" />
     <ClCompile Include="..\..\dlls\fireball.cpp" />
     <ClCompile Include="..\..\dlls\airtank.cpp" />
     <ClCompile Include="..\..\dlls\animating.cpp" />

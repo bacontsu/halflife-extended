@@ -48,7 +48,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\..\Program Files %28x86%29\Steam\steamapps\common\Half-Life\hl_extended\cl_dlls</OutDir>
+    <OutDir>..\..\compile</OutDir>
     <TargetName>client</TargetName>
     <IntDir>$(Configuration)\$(ProjectName)\int\</IntDir>
   </PropertyGroup>
