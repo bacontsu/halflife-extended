@@ -267,6 +267,8 @@ public:
 
 	static const char *pGruntSentences[];
 
+	float nextShootUpdate = 0.0f;
+
 	int m_iWeaponIdx;
 	int m_iGruntHead;
 };
@@ -291,6 +293,7 @@ TYPEDESCRIPTION	CHGrunt::m_SaveData[] =
 //  DEFINE_FIELD( CShotgun, m_iBrassShell, FIELD_INTEGER ),
 //  DEFINE_FIELD( CShotgun, m_iShotgunShell, FIELD_INTEGER ),
 	DEFINE_FIELD( CHGrunt, m_iSentence, FIELD_INTEGER ),
+	DEFINE_FIELD(CHGrunt, nextShootUpdate, FIELD_FLOAT),
 };
 
 IMPLEMENT_SAVERESTORE( CHGrunt, CSquadMonster );
@@ -1037,7 +1040,7 @@ void CHGrunt::ShootRifle()
 
 	pev->effects |= EF_MUZZLEFLASH;
 
-	m_cAmmoLoaded--;// take away a bullet!
+	m_cAmmoLoaded = 0;// take away a bullet!
 
 	Vector angDir = UTIL_VecToAngles(vecShootDir);
 	SetBlending(0, angDir.x);
@@ -1245,9 +1248,13 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 			if (pev->weapons == 4)
 			{
-				ShootRifle();
+				if (nextShootUpdate <= gpGlobals->time)
+				{
+					ShootRifle();
 
-				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sniper_fire.wav", 1, ATTN_NORM);
+					EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sniper_fire.wav", 1, ATTN_NORM);
+					nextShootUpdate = gpGlobals->time + 1.7;
+				}
 			}
 
 			if (pev->weapons == 5)

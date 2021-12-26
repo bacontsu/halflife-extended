@@ -250,6 +250,8 @@ public:
 	int m_Body;
 	int m_Nvg;
 
+	float nextShootUpdate = 0.0f;
+
 	BOOL	m_hasHandGrenades;
 	BOOL m_hasHelmet;
 
@@ -280,6 +282,7 @@ TYPEDESCRIPTION	CMOFAssassin::m_SaveData[] =
 	DEFINE_FIELD( CMOFAssassin, m_flLastShot, FIELD_TIME ),
 	DEFINE_FIELD( CMOFAssassin, m_fStandingGround, FIELD_BOOLEAN ),
 	DEFINE_FIELD( CMOFAssassin, m_flStandGroundRange, FIELD_FLOAT ),
+	DEFINE_FIELD( CMOFAssassin, nextShootUpdate, FIELD_FLOAT),
 };
 
 IMPLEMENT_SAVERESTORE( CMOFAssassin, CSquadMonster );
@@ -927,6 +930,7 @@ void CMOFAssassin::ShootRifle()
 		return;
 	}
 
+	
 	int Dmg = 20;
 	if (g_iSkillLevel == SKILL_MEDIUM)
 		Dmg = 25;
@@ -944,10 +948,12 @@ void CMOFAssassin::ShootRifle()
 
 	pev->effects |= EF_MUZZLEFLASH;
 
-	m_cAmmoLoaded--;// take away a bullet!
+	m_cAmmoLoaded = 0;// take away a bullet!
 
 	Vector angDir = UTIL_VecToAngles(vecShootDir);
 	SetBlending(0, angDir.x);
+
+	
 }
 
 //=========================================================
@@ -1111,9 +1117,13 @@ void CMOFAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		if (pev->weapons == 4)
 		{
-			ShootRifle();
+			if (nextShootUpdate <= gpGlobals->time)
+			{
+				ShootRifle();
 
-			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sniper_fire.wav", 1, ATTN_NORM);
+				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sniper_fire.wav", 1, ATTN_NORM);
+				nextShootUpdate = gpGlobals->time + 1.7;
+			}
 		}
 		if (pev->weapons == 5)
 		{

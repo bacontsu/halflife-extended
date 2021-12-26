@@ -269,6 +269,7 @@ public:
 
 	int m_iWeaponIdx;
 	int m_iGruntHead;
+	float nextShootUpdate = 0.0f;
 
 	BOOL	m_fFireRocket;
 	BOOL	m_hasHandGrenades;
@@ -296,6 +297,7 @@ TYPEDESCRIPTION	CHGruntAlly::m_SaveData[] =
 	DEFINE_FIELD( CHGruntAlly, m_iSentence, FIELD_INTEGER ),
 	DEFINE_FIELD( CHGruntAlly, m_iWeaponIdx, FIELD_INTEGER ),
 	DEFINE_FIELD( CHGruntAlly, m_iGruntHead, FIELD_INTEGER ),
+	DEFINE_FIELD( CHGruntAlly, nextShootUpdate, FIELD_FLOAT),
 };
 
 IMPLEMENT_SAVERESTORE( CHGruntAlly, COFSquadTalkMonster );
@@ -1066,7 +1068,7 @@ void CHGruntAlly::ShootRifle()
 
 	pev->effects |= EF_MUZZLEFLASH;
 
-	m_cAmmoLoaded--;// take away a bullet!
+	m_cAmmoLoaded = 0;// take away a bullet!
 
 	Vector angDir = UTIL_VecToAngles(vecShootDir);
 	SetBlending(0, angDir.x);
@@ -1277,9 +1279,13 @@ void CHGruntAlly :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 			if (pev->weapons == 4)
 			{
-				ShootRifle();
+				if (nextShootUpdate <= gpGlobals->time)
+				{
+					ShootRifle();
 
-				EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sniper_fire.wav", 1, ATTN_NORM);
+					EMIT_SOUND(ENT(pev), CHAN_WEAPON, "weapons/sniper_fire.wav", 1, ATTN_NORM);
+					nextShootUpdate = gpGlobals->time + 1.7f;
+				}
 			}
 
 			if (pev->weapons == 5)
