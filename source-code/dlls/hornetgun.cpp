@@ -47,9 +47,6 @@ void CHgun::Spawn()
 
 	m_iDefaultAmmo = HIVEHAND_DEFAULT_GIVE;
 	m_iFirePhase = 0;
-	SetActivity(ACT_IDLE);
-
-	pev->nextthink = gpGlobals->time + 0.1;
 	FallInit();// get ready to fall down.
 }
 

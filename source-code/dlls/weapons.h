@@ -195,7 +195,7 @@ public:
 #define SNIPERRIFLE_MAX_CLIP	5
 #define PENGUIN_MAX_CLIP		3
 #define CHUMMY_MAX_CLIP			WEAPON_NOCLIP
-#define AR_MAX_CLIP				50
+#define AR_MAX_CLIP				25
 #define M79_MAX_CLIP			5
 
 
@@ -222,8 +222,8 @@ public:
 #define SHOCKRIFLE_DEFAULT_GIVE		10
 #define SNIPERRIFLE_DEFAULT_GIVE	5
 #define CHUMMY_DEFAULT_GIVE			1
-#define AR_DEFAULT_GIVE		50
-#define M79_DEFAULT_GIVE		5
+#define AR_DEFAULT_GIVE				25
+#define M79_DEFAULT_GIVE			5
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE	20
@@ -243,7 +243,7 @@ public:
 #define AMMO_SNIPERRIFLE_GIVE	5
 #define AMMO_CHUMMYPICKUP_GIVE	3
 #define AMMO_GRENADEBOX_GIVE	5
-#define AMMO_ARCLIP_GIVE	50
+#define AMMO_ARCLIP_GIVE		25
 
 // bullet types
 typedef	enum
@@ -448,6 +448,8 @@ public:
 
 	int m_iLastSkin;// we don't want the "change skin" message to be sent every fraction of a second so we'll remember what was our last skin and see if it changed
 
+	float m_flNextWAnimateThink;// when should we switch to the next frame of our w_model animation?(if there's one)
+
 
 	int		m_iDefaultAmmo;// how much ammo you get when you pick up this weapon as placed by a level designer.
 
@@ -456,10 +458,6 @@ public:
 	float	m_flLastFireTime;
 
 	//For animating w_models
-	virtual void Think();
-	virtual void Materialize();
-	virtual	void SetActivity(Activity act);
-	inline Activity	GetActivity() { return m_Activity; }
 
 private:
 	Activity	m_Activity;
@@ -788,8 +786,6 @@ public:
 	int m_iShell;
 
 	float nextAnimUpdate = 0.0f;
-
-	int m_iBurstShots = 0;
 
 	BOOL UseDecrement() override
 	{
