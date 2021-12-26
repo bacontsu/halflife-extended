@@ -158,7 +158,7 @@ void C556AR::ARFire(float flSpread, float flCycleTime, BOOL fUseAutoAim, int iVo
 
 
 	// single player spread
-	vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, Vector(flSpread, flSpread, flSpread), 8192, BULLET_PLAYER_556, 2, 0, m_pPlayer->pev, m_pPlayer->random_seed);
+	vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, Vector(flSpread, flSpread, flSpread), 8192, BULLET_PLAYER_556, 2, 16, m_pPlayer->pev, m_pPlayer->random_seed);
 	
 
 	int flags;
@@ -181,16 +181,7 @@ void C556AR::ARFire(float flSpread, float flCycleTime, BOOL fUseAutoAim, int iVo
 
 void C556AR::PrimaryAttack()
 {
-	if (m_iBurstShots >= 3)
-	{
-		ARFire(0.01745, 0.55, FALSE, NORMAL_GUN_VOLUME);
-		m_iBurstShots = 0;
-	}
-	else
-	{
-		ARFire(0.02500, 0.11, FALSE, NORMAL_GUN_VOLUME);
-		m_iBurstShots++;
-	}
+	ARFire(0.01745, 0.40, FALSE, NORMAL_GUN_VOLUME);
 }
 
 
