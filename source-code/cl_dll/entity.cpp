@@ -298,6 +298,52 @@ void Beams()
 }
 #endif
 
+
+void BodyTestCallback(struct tempent_s* ent, float frametime, float currenttime)
+{
+
+		if (gEngfuncs.GetMaxClients() == 1)//ONLY IN SP
+		{
+			Vector forward;
+			cl_entity_t* player = gEngfuncs.GetLocalPlayer();
+			ent->entity = *player;
+			ent->entity.curstate.weaponmodel = NULL;
+			player->curstate.weaponmodel = NULL;
+			AngleVectors(player->angles, forward, NULL, NULL);
+			ent->entity.origin = player->origin - forward * 15;
+			ent->die = gEngfuncs.GetClientTime() + gHUD.m_flTimeDelta;
+		}
+}
+
+
+//Get the local player (uses body.mdl), animation and framerates. Finally create a new entity at the center.
+//I use null model to keep framerates and stop the draw in some cases.
+
+void BodyTest(void)
+{
+	TEMPENTITY* p;
+	struct model_s* mod;
+	Vector origin;
+	int index;
+	cl_entity_t* player;
+
+	// Load it up with some bogus data
+	player = gEngfuncs.GetLocalPlayer();
+	if (!player)
+		return;
+
+	origin = player->origin;
+	mod = gEngfuncs.CL_LoadModel("models/p_nullmodel.mdl", &index);
+
+	if (gHUD.m_flTimeDelta > 0)
+	p = gEngfuncs.pEfxAPI->CL_TentEntAllocCustom((float*)&origin, mod, 0, BodyTestCallback);
+
+	if (!p)
+		return;
+
+}
+
+
 /*
 =========================
 HUD_CreateEntities
@@ -307,6 +353,9 @@ Gives us a chance to add additional entities to the render this frame
 */
 void DLLEXPORT HUD_CreateEntities()
 {
+	if(CVAR_GET_FLOAT("cl_showplayer") == 1 && gHUD.m_flTimeDelta > 0 && CVAR_GET_FLOAT("developer") == 0)
+	BodyTest();
+
 //	RecClCreateEntities();
 
 #if defined( BEAM_TEST )

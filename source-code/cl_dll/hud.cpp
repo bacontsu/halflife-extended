@@ -407,11 +407,12 @@ void CHud::Init()
 	CVAR_CREATE("hud_red", "255", FCVAR_ARCHIVE);// hud R value
 	CVAR_CREATE("hud_green", "160", FCVAR_ARCHIVE);// hud G value
 	CVAR_CREATE("hud_blue", "0", FCVAR_ARCHIVE);// hud B value
-	CVAR_CREATE("viewmodel_fov", "0.0f", FCVAR_ARCHIVE);// hud B value
 
-	CVAR_CREATE("cl_hands", "1", FCVAR_ARCHIVE);// hud B value
+	CVAR_CREATE("viewmodel_fov", "0.0f", FCVAR_ARCHIVE); //clientside viewmodel fov
 
-	CVAR_CREATE("batterytest", "1", FCVAR_ARCHIVE);// hud B value
+	CVAR_CREATE("cl_showplayer", "0", FCVAR_ARCHIVE);// clientside player model
+
+	CVAR_CREATE("cl_hands", "0", FCVAR_ARCHIVE);// modular hand cvar check
 
 	m_iLogo = 0;
 	m_iFOV = 0;
