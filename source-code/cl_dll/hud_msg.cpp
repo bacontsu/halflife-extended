@@ -40,6 +40,7 @@ extern int giTeamplay;
 #define MAX_CLIENTS 32
 
 extern void EV_HLDM_WaterSplash(float x, float y, float z);
+extern void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, float PosNorm_Y, float PosNorm_Z, int DoPuff, int Material);
 
 int CHud::MsgFunc_WaterSplash(const char* pszName, int iSize, void* pbuf)
 {
@@ -51,6 +52,7 @@ int CHud::MsgFunc_WaterSplash(const char* pszName, int iSize, void* pbuf)
 
 	EV_HLDM_WaterSplash(X, Y, Z);
 	return 1;
+
 
 }
 
@@ -69,6 +71,36 @@ int CHud::MsgFunc_DropMag(const char* pszName, int iSize, void* pbuf)
 
 	EV_HLDM_DropMag(X, Y, Z, body);
 	return 1;
+}
+
+int CHud::MsgFunc_Impact(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	
+	int MatType = READ_SHORT();
+	
+	int DoPuffSpr = READ_BYTE();
+	
+	vec_t Pos_X, Pos_Y, Pos_Z;
+	
+	float PosNorm_X, PosNorm_Y, PosNorm_Z;
+
+	Pos_X = READ_COORD();
+	
+	Pos_Y = READ_COORD();
+	
+	Pos_Z = READ_COORD();
+	
+	PosNorm_X = READ_COORD();
+	
+	PosNorm_Y = READ_COORD();
+	
+	PosNorm_Z = READ_COORD();
+	
+	EV_HLDM_Particles(Pos_X, Pos_Y, Pos_Z, PosNorm_X, PosNorm_Y, PosNorm_Z, DoPuffSpr, MatType);
+	
+	return 1;
+
 }
 
 
@@ -119,6 +151,8 @@ void CHud::MsgFunc_ViewMode(const char* pszName, int iSize, void* pbuf)
 
 void CHud::MsgFunc_InitHUD(const char* pszName, int iSize, void* pbuf)
 {
+	m_iSkyMode = SKY_OFF; //LRC
+
 	// prepare all hud data
 	HUDLIST* pList = m_pHudList;
 
@@ -166,6 +200,18 @@ int CHud::MsgFunc_GameMode(const char* pszName, int iSize, void* pbuf)
 	return 1;
 }
 
+
+//LRC
+void CHud::MsgFunc_SetSky(const char* pszName, int iSize, void* pbuf)
+{
+	//	CONPRINT("MSG:SetSky");
+	BEGIN_READ(pbuf, iSize);
+
+	m_iSkyMode = READ_BYTE();
+	m_vecSkyPos.x = READ_COORD();
+	m_vecSkyPos.y = READ_COORD();
+	m_vecSkyPos.z = READ_COORD();
+}
 
 int CHud::MsgFunc_Damage(const char* pszName, int iSize, void* pbuf)
 {

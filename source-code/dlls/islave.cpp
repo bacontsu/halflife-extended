@@ -987,10 +987,20 @@ void CISlave::ImpulseAttack()
 	}
 }
 
-const GibData VortGibs = { "models/gibs/vortigaunt_gibs.mdl", 1, 7 };
+const GibLimit VortGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+};
+
+const GibData VortGibs = { "models/gibs/vortigaunt_gibs.mdl", 0, 7, VortGibLimits };
 void CISlave::GibMonster()
 {
-	CGib::SpawnHeadGib(pev);
 	CGib::SpawnRandomGibs(pev, 5, VortGibs);// Throw alien gibs
 	CGib::SpawnRandomGibs(pev, 2, 0);
 
@@ -1062,7 +1072,6 @@ void CDeadISlave::Spawn()
 
 void CDeadISlave::GibMonster()
 {
-	CGib::SpawnHeadGib(pev);
 	CGib::SpawnRandomGibs(pev, 5, VortGibs);// Throw alien gibs
 	CGib::SpawnRandomGibs(pev, 2, 0);
 

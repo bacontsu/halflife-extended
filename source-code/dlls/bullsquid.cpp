@@ -1335,11 +1335,20 @@ MONSTERSTATE CBullsquid :: GetIdealState ()
 	return m_IdealMonsterState;
 }
 
-const GibData SquidGibs = { "models/gibs/bullsquid_gibs.mdl", 1, 6 };
+const GibLimit SquidGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+};
+
+const GibData SquidGibs = { "models/gibs/bullsquid_gibs.mdl", 0, 6, SquidGibLimits };
 void CBullsquid::GibMonster()
 {
-	CGib::SpawnHeadGib(pev);
-	CGib::SpawnRandomGibs(pev, 4, SquidGibs);	// Throw alien gibs
+	CGib::SpawnRandomGibs(pev, 6, SquidGibs);	// Throw alien gibs
 	CGib::SpawnRandomGibs(pev, 3, 0);
 
 	SetThink(&CBaseMonster::SUB_Remove);
@@ -1413,8 +1422,7 @@ void CDeadSquid::Spawn()
 
 void CDeadSquid::GibMonster()
 {
-	CGib::SpawnHeadGib(pev);
-	CGib::SpawnRandomGibs(pev, 4, SquidGibs);	// Throw alien gibs
+	CGib::SpawnRandomGibs(pev, 6, SquidGibs);	// Throw alien gibs be used once
 	CGib::SpawnRandomGibs(pev, 3, 0);
 
 	SetThink(&CBaseMonster::SUB_Remove);

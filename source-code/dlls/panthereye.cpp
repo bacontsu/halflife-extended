@@ -19,17 +19,6 @@
 #include	"game.h"
 #include	"squadmonster.h"
 
-//--------------------------------------
-//this is from hl-invasion extdll.h
-//but we'll define it right here since this is one of the only pieces of code that need all that
-#ifndef max
-#define max(a,b)    (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a,b)    (((a) < (b)) ? (a) : (b))
-#endif
-//--------------------------------------
 
 //=====================================================
 // Monster's anim events
@@ -40,6 +29,7 @@
 #define DIABLO_AE_KICK_LOW				( 2 )
 #define DIABLO_AE_KICK_HIGH				( 3 )
 #define DIABLO_AE_STEP					( 4 )
+#define DIABLO_AE_JUMP					( 5 )
 
 
 //=====================================================
@@ -462,7 +452,7 @@ void CDiablo::HandleAnimEvent(MonsterEvent_t* pEvent)
 		break;
 	}
 
-	case 5://jump attack
+	case DIABLO_AE_JUMP://jump attack
 		SetTouch(&CDiablo::LeapTouch);
 		EMIT_SOUND_DYN(edict(), CHAN_WEAPON, "panthereye/pa_attack1.wav", 1, ATTN_IDLE, 0, 100);
 		Jump();
@@ -764,7 +754,7 @@ void CDiablo::Jump()
 		float time = speed / gravity;
 
 		//must jump at least "240" far...
-		vecJumpDir = max((m_vecEnemyLKP + m_hEnemy->pev->view_ofs - pev->origin).Length() - 80, 320) * gpGlobals->v_forward;
+		vecJumpDir = V_max((m_vecEnemyLKP + m_hEnemy->pev->view_ofs - pev->origin).Length() - 80, 320) * gpGlobals->v_forward;
 
 		vecJumpDir = vecJumpDir * (1.0 / time);
 

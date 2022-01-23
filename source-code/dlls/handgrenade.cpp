@@ -271,7 +271,8 @@ class CGrenadeBox : public CBasePlayerAmmo
 	}
 	BOOL AddAmmo(CBaseEntity* pOther) override
 	{
-		CBaseEntity* pNadeBox = CBaseEntity::Create("weapon_handgrenade", pev->origin, pev->angles);
+		CBaseEntity* pNadeBox = CBaseEntity::Create("weapon_handgrenade", pOther->pev->origin, pev->angles);
+		pNadeBox->pev->effects |= EF_NODRAW;
 		int bResult = (pOther->GiveAmmo(4, "Hand Grenade", HANDGRENADE_MAX_CARRY) != -1);
 		if (bResult)
 		{

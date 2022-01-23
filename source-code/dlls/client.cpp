@@ -671,6 +671,12 @@ void ClientCommand( edict_t *pEntity )
 			DumpCTFFlagInfo(reinterpret_cast<CBasePlayer*>(GET_PRIVATE(pEntity)));
 		}
 	}
+	else if (FStrEq(pcmd, "VModEnable")) //LRC - shut up about VModEnable...
+	{
+	// g-cont. VModEnable at top the cases broke VoiceMod system in multiplayer
+	// you don't know about it Laurie!
+	return;
+	}
 	else
 	{
 		// tell the user they entered an unknown command
@@ -684,6 +690,7 @@ void ClientCommand( edict_t *pEntity )
 		// tell the user they entered an unknown command
 		ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
 	}
+	
 }
 
 
@@ -981,6 +988,9 @@ void ClientPrecache()
 	PRECACHE_SOUND("player/pl_pain7.wav");
 
 	PRECACHE_MODEL("models/player.mdl");
+	// body in first person
+	PRECACHE_MODEL("models/body1.mdl");
+	PRECACHE_MODEL("models/p_nullmodel.mdl");
 
 	// hud sounds
 
@@ -999,6 +1009,64 @@ void ClientPrecache()
 	PRECACHE_SOUND("player/geiger3.wav");
 	PRECACHE_SOUND("player/geiger2.wav");
 	PRECACHE_SOUND("player/geiger1.wav");
+
+	PRECACHE_SOUND("debris/flesh1.wav");
+	PRECACHE_SOUND("debris/flesh2.wav");
+	PRECACHE_SOUND("debris/flesh3.wav");
+	PRECACHE_SOUND("debris/flesh4.wav");
+	PRECACHE_SOUND("debris/flesh5.wav");
+	PRECACHE_SOUND("debris/flesh6.wav");
+	PRECACHE_SOUND("debris/flesh7.wav");
+
+
+	PRECACHE_MODEL("sprites/debris/smokepuff.spr");
+	
+
+	
+	PRECACHE_MODEL("sprites/debris/debris_computer01.spr");
+	PRECACHE_MODEL("sprites/debris/debris_computer02.spr");
+	PRECACHE_MODEL("sprites/debris/debris_computer03.spr");
+	PRECACHE_MODEL("sprites/debris/debris_computer04.spr");
+	PRECACHE_MODEL("sprites/debris/debris_computer05.spr");
+	
+
+	
+	PRECACHE_MODEL("sprites/debris/debris_concrete01.spr");
+	PRECACHE_MODEL("sprites/debris/debris_concrete02.spr");
+	PRECACHE_MODEL("sprites/debris/debris_concrete03.spr");
+	PRECACHE_MODEL("sprites/debris/debris_concrete04.spr");
+	PRECACHE_MODEL("sprites/debris/debris_concrete05.spr");
+	PRECACHE_MODEL("sprites/debris/debris_concrete06.spr");
+	
+	PRECACHE_MODEL("sprites/debris/debris_dirt01.spr");
+	PRECACHE_MODEL("sprites/debris/debris_dirt02.spr");
+	PRECACHE_MODEL("sprites/debris/debris_dirt03.spr");
+	PRECACHE_MODEL("sprites/debris/debris_dirt04.spr");
+	PRECACHE_MODEL("sprites/debris/debris_dirt05.spr");
+	PRECACHE_MODEL("sprites/debris/debris_dirt06.spr");
+	
+	PRECACHE_MODEL("sprites/debris/debris_glass01.spr");
+	PRECACHE_MODEL("sprites/debris/debris_glass02.spr");
+	PRECACHE_MODEL("sprites/debris/debris_glass03.spr");
+	PRECACHE_MODEL("sprites/debris/debris_glass04.spr");
+	PRECACHE_MODEL("sprites/debris/debris_glass05.spr");
+	PRECACHE_MODEL("sprites/debris/debris_glass06.spr");
+	
+	PRECACHE_MODEL("sprites/debris/debris_metal01.spr");
+	PRECACHE_MODEL("sprites/debris/debris_metal02.spr");
+	PRECACHE_MODEL("sprites/debris/debris_metal03.spr");
+	PRECACHE_MODEL("sprites/debris/debris_metal04.spr");
+	PRECACHE_MODEL("sprites/debris/debris_metal05.spr");
+	PRECACHE_MODEL("sprites/debris/debris_metal06.spr");
+	
+	PRECACHE_MODEL("sprites/debris/debris_wood01.spr");
+	PRECACHE_MODEL("sprites/debris/debris_wood02.spr");
+	PRECACHE_MODEL("sprites/debris/debris_wood03.spr");
+	PRECACHE_MODEL("sprites/debris/debris_wood04.spr");
+	PRECACHE_MODEL("sprites/debris/debris_wood05.spr");
+	
+		PRECACHE_MODEL("sprites/debris/debris_wood06.spr");
+
 
 	// gunshot impact effect
 	PRECACHE_MODEL("sprites/shot_smoke.spr");
@@ -1288,16 +1356,16 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		state->effects &= ~EF_BRIGHTLIGHT;
 	}
 
+	
+
 	// This non-player entity is being moved by the game .dll and not the physics simulation system
 	//  make sure that we interpolate it's position on the client if it moves
-	if ( !player &&
-		 ent->v.animtime &&
-		 ent->v.velocity[ 0 ] == 0 && 
-		 ent->v.velocity[ 1 ] == 0 && 
-		 ent->v.velocity[ 2 ] == 0 )
-	{
+	
+	// Model stuttering bugfixes.
+	if (ent->v.flags & FL_FLY)
 		state->eflags |= EFLAG_SLERP;
-	}
+	else
+		state->eflags &= ~EFLAG_SLERP;
 
 	state->scale	  = ent->v.scale;
 	state->solid	  = ent->v.solid;

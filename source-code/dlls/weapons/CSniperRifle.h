@@ -56,6 +56,8 @@ public:
 
 	void PrimaryAttack() override;
 
+	BOOL m_fInZoom;// don't save this.
+
 
 	void SecondaryAttack() override;
 

@@ -223,7 +223,7 @@ public:
 	static const char* pAlertSounds[];
 	static const char* pPainSounds[];
 
-	EHANDLE m_hDead;
+	CBaseEntity* m_pDead;
 
 
 	CUSTOM_SCHEDULES;
@@ -347,6 +347,7 @@ void CKpin::Precache()
 	PRECACHE_SOUND("kingpin/kp_attack.wav");
 	PRECACHE_SOUND("kingpin/kp_walk.wav");
 	PRECACHE_SOUND("kingpin/kp_slither.wav");
+	PRECACHE_SOUND("debris/beamstart7.wav");
 
 	int i;
 
@@ -436,24 +437,12 @@ void CKpin::HandleAnimEvent(MonsterEvent_t* pEvent)
 	switch (pEvent->event)
 	{
 	case KINGPIN_AE_CLAWLEFT:
-		if (pev->health <= pev->max_health * 0.5)
-		{
-			pev->framerate = 1.25;// claw faster on stage 2
-		}
 		ClawAttackLeft();
 		break;
 	case KINGPIN_AE_CLAWRIGHT:
-		if (pev->health <= pev->max_health * 0.5)
-		{
-			pev->framerate = 1.25;// claw faster on stage 2
-		}
 		ClawAttackRight();
 		break;
 	case KINGPIN_AE_CLAWBOTH:
-		if (pev->health <= pev->max_health * 0.5)
-		{
-			pev->framerate = 1.25;// claw faster on stage 2
-		}
 		ClawAttackBoth();
 		break;
 
@@ -496,15 +485,8 @@ BOOL CKpin::CheckMeleeAttack1(float flDot, float flDist)
 // swipe left
 void CKpin::ClawAttackLeft()
 {
-	int SlashDmg;
-	if (pev->health <= pev->max_health * 0.5)
-	{
-		SlashDmg = gSkillData.zombieDmgOneSlash * 1.5;
-	}
-	else
-	{
-		SlashDmg = gSkillData.zombieDmgOneSlash;
-	}
+	int SlashDmg = gSkillData.zombieDmgOneSlash;
+	
 
 	CBaseEntity* pHurt = CheckTraceHullAttack(70, SlashDmg, DMG_SLASH);
 	if (pHurt)
@@ -526,15 +508,8 @@ void CKpin::ClawAttackLeft()
 //swipe right
 void CKpin::ClawAttackRight()
 {
-	int SlashDmg;
-	if (pev->health <= pev->max_health * 0.5)
-	{
-		SlashDmg = gSkillData.zombieDmgOneSlash * 1.5;
-	}
-	else
-	{
-		SlashDmg = gSkillData.zombieDmgOneSlash;
-	}
+	int SlashDmg = gSkillData.zombieDmgOneSlash;
+	
 	CBaseEntity* pHurt = CheckTraceHullAttack(70, SlashDmg, DMG_SLASH);
 	if (pHurt)
 	{
@@ -556,15 +531,8 @@ void CKpin::ClawAttackRight()
 //swipe both
 void CKpin::ClawAttackBoth()
 {
-	int SlashDmg;
-	if (pev->health <= pev->max_health * 0.5)
-	{
-		SlashDmg = gSkillData.zombieDmgBothSlash * 1.5;
-	}
-	else
-	{
-		SlashDmg = gSkillData.zombieDmgBothSlash;
-	}
+	int SlashDmg = gSkillData.zombieDmgBothSlash;
+
 	CBaseEntity* pHurt = CheckTraceHullAttack(70, SlashDmg, DMG_SLASH);
 	if (pHurt)
 	{
@@ -585,13 +553,9 @@ void CKpin::ClawAttackBoth()
 // Checking Range attacks
 //=========================================================
 
-//check for strangle attack
+//check for magic push attack
 BOOL CKpin::CheckRangeAttack1(float flDot, float flDist)
 {
-	if (pev->health <= pev->max_health * 0.5)// no magic on stage 2, only hardcore
-	{
-		return FALSE;
-	}
 	if (m_flNextAttack > gpGlobals->time)
 	{
 		return FALSE;
@@ -605,7 +569,6 @@ BOOL CKpin::CheckRangeAttack1(float flDot, float flDist)
 }
 
 //check for resurrect "attack"
-// This code is so ugly!
 BOOL CKpin::CheckRangeAttack2(float flDot, float flDist)
 {
 	if (m_flNextResurrectCheck > gpGlobals->time)
@@ -613,138 +576,70 @@ BOOL CKpin::CheckRangeAttack2(float flDot, float flDist)
 		return FALSE;
 	}
 
-	if (pev->health <= pev->max_health * 0.5)// no magic on stage 2, only hardcore
-	{
-		return FALSE;
-	}
-
 	flDist = 512;
 
+	m_pDead = nullptr;
 
-	m_hDead = NULL;
+	CBaseEntity* pEntity = nullptr;
+	CBaseEntity* pObstacle = nullptr;
+	const char* pSearchTarget;
 
-	CBaseEntity* pEntity = NULL;
-
-	//LOOK FOR VORTS AROUND FIRST
-	if ((pEntity = UTIL_FindEntityByClassname(pEntity, "monster_alien_slave")) != NULL)
+	// randomly decide whom are we going to look for
+	switch (RANDOM_LONG(1, 5))
 	{
-		TraceResult tr;
+	case 1:
+		pSearchTarget = "monster_alien_slave";
+		break;
 
-		UTIL_TraceLine(EyePosition(), pEntity->Center(), ignore_monsters, ENT(pev), &tr);
-		if (tr.flFraction == 1.0 || tr.pHit == pEntity->edict())
-		{
-			if (pEntity->pev->deadflag != DEAD_NO)
-			{
-				float d = (pev->origin - pEntity->Center()).Length();
-				if (d < flDist)
-				{
-					ReviveTarget = REVIVE_VORT;
-					m_hDead = pEntity;
-					flDist = d;
-				}
-			}
-		}
+	case 2:
+		pSearchTarget = "monster_bullchicken";
+		break;
+
+	case 3:
+		pSearchTarget = "monster_houndeye";
+		break;
+
+	case 4:
+		pSearchTarget = "monster_headcrab";
+		break;
+
+	case 5:
+		pSearchTarget = "monster_controller";
+		break;
 	}
-	if (m_hDead == NULL)// no dead vorts around here
+		 
+	// find dead bodies
+	if ((pEntity = UTIL_FindEntityByClassname(pEntity, pSearchTarget)) != nullptr)
 	{
-		if ((pEntity = UTIL_FindEntityByClassname(pEntity, "monster_controller")) != NULL)// now look for controllers
+		if (pEntity->pev->deadflag != DEAD_NO)
 		{
-			TraceResult tr;
-
-			UTIL_TraceLine(EyePosition(), pEntity->Center(), ignore_monsters, ENT(pev), &tr);
-			if (tr.flFraction == 1.0 || tr.pHit == pEntity->edict())
+			float d = (pev->origin - pEntity->Center()).Length();
+			if (d < flDist)
 			{
-				if (pEntity->pev->deadflag != DEAD_NO)
-				{
-					float d = (pev->origin - pEntity->Center()).Length();
-					if (d < flDist)
-					{
-						ReviveTarget = REVIVE_CONTROLLER;
-						m_hDead = pEntity;
-						flDist = d;
-					}
-				}
-			}
-		}
-	}
-	if (m_hDead == NULL)// no dead eggheads around here
-	{
-		if ((pEntity = UTIL_FindEntityByClassname(pEntity, "monster_bullchicken")) != NULL)// now look for bullsquids
-		{
-			TraceResult tr;
-
-			UTIL_TraceLine(EyePosition(), pEntity->Center(), ignore_monsters, ENT(pev), &tr);
-			if (tr.flFraction == 1.0 || tr.pHit == pEntity->edict())
-			{
-				if (pEntity->pev->deadflag != DEAD_NO)
-				{
-					float d = (pev->origin - pEntity->Center()).Length();
-					if (d < flDist)
-					{
-						ReviveTarget = REVIVE_SQUID;
-						m_hDead = pEntity;
-						flDist = d;
-					}
-				}
-			}
-		}
-	}
-	if (m_hDead == NULL)// no dead squids around here
-	{
-		while ((pEntity = UTIL_FindEntityByClassname(pEntity, "monster_houndeye")) != NULL)// now look for houndeyes
-		{
-			TraceResult tr;
-
-			UTIL_TraceLine(EyePosition(), pEntity->Center(), ignore_monsters, ENT(pev), &tr);
-			if (tr.flFraction == 1.0 || tr.pHit == pEntity->edict())
-			{
-				if (pEntity->pev->deadflag != DEAD_NO)
-				{
-					float d = (pev->origin - pEntity->Center()).Length();
-					if (d < flDist)
-					{
-						ReviveTarget = REVIVE_HOUNDEYE;
-						m_hDead = pEntity;
-						flDist = d;
-					}
-				}
-			}
-		}
-	}
-	if (m_hDead == NULL)// no dead DOGS around here
-	{
-		if ((pEntity = UTIL_FindEntityByClassname(pEntity, "monster_headcrab")) != NULL)// our last hope is headcrabs
-		{
-			TraceResult tr;
-
-			UTIL_TraceLine(EyePosition(), pEntity->Center(), ignore_monsters, ENT(pev), &tr);
-			if (tr.flFraction == 1.0 || tr.pHit == pEntity->edict())
-			{
-				if (pEntity->pev->deadflag != DEAD_NO)
-				{
-					float d = (pev->origin - pEntity->Center()).Length();
-					if (d < flDist)
-					{
-						ReviveTarget = REVIVE_CRAB;
-						m_hDead = pEntity;
-						flDist = d;
-					}
-				}
+				m_pDead = pEntity;
+				flDist = d;
 			}
 		}
 	}
 
+	// make sure nothing gets stuck in our revived targets
+	if (m_pDead != nullptr)
+	{
+		if (pObstacle = UTIL_FindEntityInSphere(pEntity, pEntity->pev->origin, 64))
+		{
+			return FALSE;
+		}
+	}
+	
 
-	if (m_hDead != NULL && flDist < 512)
+
+	if (m_pDead != nullptr && flDist < 512)
 	{
 		return TRUE;
 	}
-	else
-	{
-		return FALSE;
-	}
+	return FALSE;
 
-	m_flNextResurrectCheck = gpGlobals->time + 5;// check only every 5 seconds
+	m_flNextResurrectCheck = gpGlobals->time + 3;// check only every 3 seconds
 }
 //=========================================================
 // Range attacks
@@ -761,71 +656,84 @@ void CKpin::TelekinesisAttack()
 	// iterate on all entities in the vicinity.
 	while ((pEntity = UTIL_FindEntityInSphere(pEntity, pev->origin, 400)) != NULL)
 	{
-		if (pEntity->pev->takedamage != DAMAGE_NO)
+		if (pEntity->IsPlayer())
 		{
-			if (pEntity->IsPlayer())
+			flDmg = gSkillData.kpinDmgTele;
+
+			flDist = (pEntity->Center() - pev->origin).Length();
+
+			flDmg -= (flDist / 400) * flDmg;
+
+			if (flDmg > 0)
 			{
-				flDmg = gSkillData.kpinDmgTele;
-
-				flDist = (pEntity->Center() - pev->origin).Length();
-
-				flDmg -= (flDist / 400) * flDmg;
-
-				if (flDmg > 0)
-				{
-					pEntity->TakeDamage(pev, pev, flDmg, DMG_SONIC | DMG_NEVERGIB);
-				}
-
-				UTIL_ScreenShake(pEntity->pev->origin, 25.0, 1.5, 0.7, 2);
-				UTIL_MakeVectors(pev->angles);
-				pEntity->pev->velocity = pEntity->pev->velocity + gpGlobals->v_forward * 400 + gpGlobals->v_up * 400;
+				pEntity->TakeDamage(pev, pev, flDmg, DMG_SONIC | DMG_NEVERGIB);
 			}
 
+			UTIL_ScreenShake(pEntity->pev->origin, 25.0, 1.5, 0.7, 2);
+			UTIL_MakeVectors(pev->angles);
+			pEntity->pev->velocity = pEntity->pev->velocity + gpGlobals->v_forward * 400 + gpGlobals->v_up * 400;
 		}
 	}
-	m_flNextAttack = gpGlobals->time + RANDOM_FLOAT(1, 2);
+	m_flNextAttack = gpGlobals->time + 1.5;
 }
 
 //resurrect "attack"
 void CKpin::ResurrectRitual()
 {
-	CBaseEntity* pRevived;
-	Vector EffectPlace = Vector(m_hDead->pev->origin.x, m_hDead->pev->origin.y, m_hDead->pev->origin.z + 80);
-	Vector CorpseAngles = m_hDead->pev->angles;
+	// oops, we somehow got here but forgot whom we wanted to revive
+	if (m_pDead == nullptr)
+	{
+		// reset and pretend nothing embarassing happened
+		m_flNextResurrectCheck = gpGlobals->time + 0.1;
+		return;
+	}
+		
+	Vector EffectPlace = m_pDead->pev->origin;
+	Vector CorpseAngles = m_pDead->pev->angles;
+	const char* CorpseClass = STRING(m_pDead->pev->classname);
 	edict_t* pos;
 
-	pos = m_hDead->edict();
+	pos = m_pDead->edict();
 
-	if (ReviveTarget == REVIVE_CRAB)
-	{
-		pRevived = CBaseEntity::Create("monster_headcrab", EffectPlace, CorpseAngles);
-	}
-	else if (ReviveTarget == REVIVE_SQUID)
-	{
-		pRevived = CBaseEntity::Create("monster_bullchicken", EffectPlace, CorpseAngles);
-	}
-	else if (ReviveTarget == REVIVE_VORT)
-	{
-		pRevived = CBaseEntity::Create("monster_alien_slave", EffectPlace, CorpseAngles);
-	}
-	else if (ReviveTarget == REVIVE_CONTROLLER)
-	{
-		pRevived = CBaseEntity::Create("monster_controller", EffectPlace, CorpseAngles);
-	}
-	else if (ReviveTarget == REVIVE_HOUNDEYE)
-	{
-		pRevived = CBaseEntity::Create("monster_houndeye", EffectPlace, CorpseAngles);
-	}
-	else return;
+	CBaseEntity::Create(CorpseClass, EffectPlace, CorpseAngles);
 
+
+	//some effects
+	int iBeams = 0;
+
+	TraceResult tr;
+	CBeam* pBeam[8];
+
+	//cloud
 	EMIT_SOUND(pos, CHAN_BODY, "debris/beamstart2.wav", 1, ATTN_NORM);
 	UTIL_ScreenShake(EffectPlace, 6, 160, 1.0, pev->button);
 	CSprite* pSpr = CSprite::SpriteCreate("sprites/Fexplo1.spr", EffectPlace, TRUE);
 	pSpr->AnimateAndDie(18);
 	pSpr->SetTransparency(kRenderGlow, 77, 210, 130, 255, kRenderFxNoDissipation);
 
-	UTIL_Remove(m_hDead);
-	m_hDead = NULL;
+	//beams
+	EMIT_SOUND(pos, CHAN_ITEM, "debris/beamstart7.wav", 1, ATTN_NORM);
+
+	while (iBeams < 4)
+	{
+		Vector vecDest = pev->origin + gpGlobals->v_up * 300;
+		UTIL_TraceLine(EffectPlace, EffectPlace + vecDest, ignore_monsters, NULL, &tr);
+
+		pBeam[iBeams] = CBeam::BeamCreate("sprites/lgtning.spr", 30);
+		pBeam[iBeams]->PointsInit(EffectPlace, tr.vecEndPos);
+		pBeam[iBeams]->SetColor(142, 0, 224);
+		pBeam[iBeams]->SetNoise(65);
+		pBeam[iBeams]->SetBrightness(220);
+		pBeam[iBeams]->SetThink(&CBeam::SUB_Remove);
+		pBeam[iBeams]->pev->nextthink = gpGlobals->time + RANDOM_FLOAT(0.5, 1.6);
+		iBeams++;
+	}
+	
+
+
+	
+
+	UTIL_Remove(m_pDead);
 }
 
 void CKpin::StartTask(Task_t *pTask)

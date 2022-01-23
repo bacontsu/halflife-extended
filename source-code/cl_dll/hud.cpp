@@ -34,6 +34,9 @@
 hud_player_info_t	 g_PlayerInfoList[MAX_PLAYERS + 1];	   // player info from the engine
 extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS + 1];   // additional player info sent directly to the client dll
 
+cvar_t* cl_gunsmoke;
+
+
 int giR, giG, giB;
 
 extern int giOldWeapons;
@@ -121,6 +124,14 @@ int __MsgFunc_ResetHUD(const char* pszName, int iSize, void* pbuf)
 	return gHUD.MsgFunc_ResetHUD(pszName, iSize, pbuf);
 }
 
+//LRC
+int __MsgFunc_SetSky(const char* pszName, int iSize, void* pbuf)
+{
+	gHUD.MsgFunc_SetSky(pszName, iSize, pbuf);
+
+	return 1;
+}
+
 int __MsgFunc_InitHUD(const char* pszName, int iSize, void* pbuf)
 {
 	gHUD.MsgFunc_InitHUD(pszName, iSize, pbuf);
@@ -165,6 +176,13 @@ int __MsgFunc_WaterSplash(const char* pszName, int iSize, void* pbuf)
 {
 	gHUD.MsgFunc_WaterSplash(pszName, iSize, pbuf);
 	return 1;
+}
+
+int __MsgFunc_Impact(const char* pszName, int iSize, void* pbuf)
+{
+	gHUD.MsgFunc_Impact(pszName, iSize, pbuf);
+	return 1;
+
 }
 
 
@@ -359,8 +377,10 @@ void CHud::Init()
 	HOOK_MESSAGE(ViewMode);
 	HOOK_MESSAGE(SetFOV);
 	HOOK_MESSAGE(Concuss);
+	HOOK_MESSAGE(SetSky); //LRC
 	HOOK_MESSAGE(HudColor);
 	HOOK_MESSAGE(OldWeapon);
+	
 
 	// TFFree CommandMenu
 	HOOK_COMMAND("+commandmenu", OpenCommandMenu);
@@ -397,6 +417,9 @@ void CHud::Init()
 	HOOK_MESSAGE(SetSkin);
 	HOOK_MESSAGE(WpnSkn);
 
+	HOOK_MESSAGE(Impact);
+
+
 
 	// VGUI Menus
 	HOOK_MESSAGE(VGUIMenu);
@@ -408,11 +431,12 @@ void CHud::Init()
 	CVAR_CREATE("hud_green", "160", FCVAR_ARCHIVE);// hud G value
 	CVAR_CREATE("hud_blue", "0", FCVAR_ARCHIVE);// hud B value
 
-	CVAR_CREATE("viewmodel_fov", "0.0f", FCVAR_ARCHIVE); //clientside viewmodel fov
-
+	CVAR_CREATE("viewmodel_fov", "0.0f", FCVAR_ARCHIVE);// clientside viewmodel fov
+	CVAR_CREATE("cl_hands", "1", FCVAR_ARCHIVE);// modular hand cvar check
 	CVAR_CREATE("cl_showplayer", "0", FCVAR_ARCHIVE);// clientside player model
 
-	CVAR_CREATE("cl_hands", "0", FCVAR_ARCHIVE);// modular hand cvar check
+	CVAR_CREATE("batterytest", "1", FCVAR_ARCHIVE);// hud B value
+
 
 	m_iLogo = 0;
 	m_iFOV = 0;
@@ -464,6 +488,7 @@ void CHud::Init()
 	m_FlagIcons.Init();
 	m_PlayerBrowse.Init();
 	gFog.Init();
+	m_Zoom.Init();
 	GetClientVoiceMgr()->Init(&g_VoiceStatusHelper, (vgui::Panel**)&gViewPort);
 
 	m_Menu.Init();
@@ -613,7 +638,9 @@ void CHud::VidInit()
 	m_StatusIcons.VidInit();
 	m_FlagIcons.VidInit();
 	m_PlayerBrowse.VidInit();
+	m_Zoom.VidInit();
 	gFog.VidInit();
+
 	GetClientVoiceMgr()->VidInit();
 
 }

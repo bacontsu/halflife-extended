@@ -167,6 +167,7 @@
     <ClCompile Include="..\..\cl_dll\vgui_teammenu.cpp" />
     <ClCompile Include="..\..\cl_dll\view.cpp" />
     <ClCompile Include="..\..\cl_dll\voice_status.cpp" />
+    <ClCompile Include="..\..\cl_dll\zoom.cpp" />
     <ClCompile Include="..\..\common\mathlib.cpp" />
     <ClCompile Include="..\..\common\parsemsg.cpp" />
     <ClCompile Include="..\..\dlls\crossbow.cpp" />

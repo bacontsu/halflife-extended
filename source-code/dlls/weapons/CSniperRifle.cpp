@@ -225,7 +225,7 @@ int CSniperRifle::GetItemInfo( ItemInfo* p )
 	p->iMaxAmmo2 = WEAPON_NOCLIP;
 	p->iMaxClip = SNIPERRIFLE_MAX_CLIP;
 	p->iSlot = 5;
-	p->iPosition = 2;
+	p->iPosition = 1;
 	p->iFlags = 0;
 	p->iId = m_iId = WEAPON_SNIPERRIFLE;
 	p->iWeight = SNIPERRIFLE_WEIGHT;
@@ -242,15 +242,26 @@ void CSniperRifle::IncrementAmmo(CBasePlayer* pPlayer)
 
 void CSniperRifle::ToggleZoom()
 {
-	if( m_pPlayer->m_iFOV == 0 )
+	if (m_pPlayer->pev->fov != 0)
 	{
-		m_pPlayer->m_iFOV = 18;
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0; // 0 means reset to default fov
+		m_fInZoom = 0;
+#ifndef CLIENT_DLL
+		UTIL_ScreenFade(m_pPlayer, Vector(0, 0, 0), 0.5, 0.25, 255, 0);
+#endif
 	}
-	else
+	else if (m_pPlayer->pev->fov != 15)
 	{
-		m_pPlayer->m_iFOV = 0;
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 15;
+		m_fInZoom = 1;
+#ifndef CLIENT_DLL
+		UTIL_ScreenFade(m_pPlayer, Vector(0, 0, 0), 0.5, 0.25, 255, 0);
+#endif
 	}
+	pev->nextthink = UTIL_WeaponTimeBase() + 0.1;
+	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0;
 }
+
 
 class CSniperRifleAmmo : public CBasePlayerAmmo
 {

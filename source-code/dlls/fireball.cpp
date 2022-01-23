@@ -52,7 +52,7 @@ void CFireball::Spawn()
 	pev->movetype = MOVETYPE_FLY;
 	pev->solid = SOLID_BBOX;
 
-	SET_MODEL(ENT(pev), "sprites/glow_red.spr");
+	SET_MODEL(ENT(pev), "models/inferno_rocket.mdl");
 	UTIL_SetSize(pev, Vector(0, 0, 0), Vector(0, 0, 0));
 	UTIL_SetOrigin(pev, pev->origin);
 
@@ -95,7 +95,7 @@ void CFireball::FireballTouch(CBaseEntity* pOther)
 //=========================================================
 void CFireball::Precache()
 {
-	PRECACHE_MODEL("sprites/glow_red.spr");
+	PRECACHE_MODEL("models/inferno_rocket.mdl");
 	m_iTrail = PRECACHE_MODEL("sprites/smoke.spr");
 	PRECACHE_SOUND("agrunt/inferno_travel.wav");
 	PRECACHE_SOUND("agrunt/inferno_impact.wav");

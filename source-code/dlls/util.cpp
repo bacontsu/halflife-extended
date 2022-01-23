@@ -19,7 +19,7 @@
   Utility code.  Really not optional after all.
 
 */
-
+#include <filesystem>
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -2576,4 +2576,55 @@ bool UTIL_IsMultiplayer()
 bool UTIL_IsCTF()
 {
 	return g_pGameRules->IsCTF();
+}
+
+void SET_MODEL(edict_t* e, const char* model)
+{
+	if (strlen(model) > 4)
+	{
+		// mod directory
+		char modName[MAX_PATH];
+		g_engfuncs.pfnGetGameDir(modName);
+		strcat(modName, "/");
+		strcat(modName, model);
+
+		// hl directory (valve)
+		char modName2[MAX_PATH] = "valve/";
+		strcat(modName2, model);
+
+		if (std::filesystem::exists(modName) || std::filesystem::exists(modName2))
+			g_engfuncs.pfnSetModel(e, (char*)model);
+		else
+		{
+			g_engfuncs.pfnPrecacheModel("models/error.mdl");
+			g_engfuncs.pfnSetModel(e, "models/error.mdl");
+		}
+	}
+	else
+		g_engfuncs.pfnSetModel(e, (char*)model);
+}
+
+int PRECACHE_MODEL(const char* s)
+{
+	int model;
+
+	if (strlen(s) > 4)
+	{
+		// mod directory
+		char modName[MAX_PATH];
+		g_engfuncs.pfnGetGameDir(modName);
+		strcat(modName, "/");
+		strcat(modName, s);
+
+		// hl directory (valve)
+		char modName2[MAX_PATH] = "valve/";
+		strcat(modName2, s);
+
+		if (std::filesystem::exists(modName) || std::filesystem::exists(modName2))
+			return model = g_engfuncs.pfnPrecacheModel((char*)s);
+		else
+			return g_engfuncs.pfnPrecacheModel("models/error.mdl");
+	}
+	else
+		return model = g_engfuncs.pfnPrecacheModel((char*)s);
 }

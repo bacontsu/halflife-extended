@@ -469,7 +469,21 @@ DEFINE_CUSTOM_SCHEDULES( CGargantua )
 IMPLEMENT_CUSTOM_SCHEDULES( CGargantua, CBaseMonster );
 
 
-const GibData GargGibs = { "models/gibs/gibs_gargantua.mdl", 0, 9 };
+const GibLimit GargGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+};
+
+const GibData GargGibs = { "models/gibs/gibs_gargantua.mdl", 0, 10, GargGibLimits };
 void CGargantua::GibMonster()
 {
 	CGib::SpawnRandomGibs(pev, 4, GargGibs);	// Throw alien gibs

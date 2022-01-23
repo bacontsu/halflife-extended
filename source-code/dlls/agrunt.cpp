@@ -109,6 +109,8 @@ public:
 	void StopTalking ();
 	BOOL ShouldSpeak();
 
+	void GibMonster() override;
+
 	void FireFireball();
 	void FirePlasma();
 	void FireToxic();
@@ -139,6 +141,9 @@ public:
 	float	m_flNextSpeakTime;
 	float	m_flNextWordTime;
 	int		m_iLastWord;
+
+	const char* AGruntModel = "models/agrunt.mdl";// agrunt body, hivehand grunt by default
+	const char* GibModel = "models/gibs/agrunt_gibs.mdl";// agrunt gibs, hivehand grunt gibs by default
 };
 LINK_ENTITY_TO_CLASS( monster_alien_grunt, CAGrunt );
 
@@ -205,6 +210,32 @@ const char *CAGrunt::pAlertSounds[] =
 	"agrunt/ag_alert4.wav",
 	"agrunt/ag_alert5.wav",
 };
+
+const GibLimit AGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+};
+
+void CAGrunt::GibMonster()
+{
+	if (pev->weapons != AGRUNT_NAKED)
+	{
+		const GibData AGibs = { GibModel, 0, 6, AGibLimits };
+
+		CGib::SpawnRandomGibs(pev, 6, AGibs);
+		CGib::SpawnRandomGibs(pev, 3, 0);
+
+		SetThink(&CBaseMonster::SUB_Remove);
+		pev->nextthink = gpGlobals->time;
+	}
+	else CBaseMonster::GibMonster();
+}
 
 //=========================================================
 // IRelationship - overridden because Human Grunts are 
@@ -354,7 +385,7 @@ void CAGrunt :: PrescheduleThink ()
 			}
 		}
 	}
-
+	
 	if ((pev->skin == 0) && RANDOM_LONG(0, 0x7F) == 0)
 	{// start blinking!
 		pev->skin = 3;
@@ -363,6 +394,7 @@ void CAGrunt :: PrescheduleThink ()
 	{// already blinking
 		pev->skin--;
 	}
+	
 }
 
 //=========================================================
@@ -577,14 +609,8 @@ void CAGrunt :: Spawn()
 {
 	Precache( );
 
-	//this check is kinda shit, we should combine them into one model at some point
-	SET_MODEL(ENT(pev), "models/agrunt.mdl");
-	if (pev->weapons == AGRUNT_FIREBALL)
-		SET_MODEL(ENT(pev), "models/agrunt_2.mdl");
-	if (pev->weapons == AGRUNT_PLASMARIFLE)
-		SET_MODEL(ENT(pev), "models/agrunt_3.mdl");
-	if (pev->weapons == AGRUNT_NAKED)
-		SET_MODEL(ENT(pev), "models/agrunt_noarmor.mdl");
+
+	SET_MODEL(ENT(pev), AGruntModel);
 	
 	UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 64));
 
@@ -609,17 +635,27 @@ void CAGrunt :: Spawn()
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
-void CAGrunt :: Precache()
+void CAGrunt::Precache()
 {
 	int i;
-	
-		PRECACHE_MODEL("models/agrunt.mdl");
+
 	if (pev->weapons == AGRUNT_FIREBALL)
-		PRECACHE_MODEL("models/agrunt_2.mdl");
+	{
+		AGruntModel = "models/agrunt_2.mdl";
+		GibModel = "models/gibs/agrunt2_gibs.mdl";
+	}
 	if (pev->weapons == AGRUNT_PLASMARIFLE)
-		PRECACHE_MODEL("models/agrunt_3.mdl");
+	{
+		AGruntModel = "models/agrunt_3.mdl";
+		GibModel = "models/gibs/agrunt3_gibs.mdl";
+	}
 	if (pev->weapons == AGRUNT_NAKED)
-		PRECACHE_MODEL("models/agrunt_noarmor.mdl");
+		AGruntModel = "models/agrunt_noarmor.mdl";
+
+	PRECACHE_MODEL(AGruntModel);
+	PRECACHE_MODEL(GibModel);
+
+	
 	
 
 	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
@@ -1407,6 +1443,11 @@ public:
 	void Spawn() override;
 	int	Classify() override { return	CLASS_HUMAN_PASSIVE; }
 
+	void GibMonster();
+
+	const char* AGruntModel = "models/agrunt.mdl";// agrunt body, hivehand grunt by default
+	const char* GibModel = "models/gibs/agrunt_gibs.mdl";// agrunt gibs, hivehand grunt gibs by default
+
 	void KeyValue(KeyValueData* pkvd) override;
 	int	m_iPose;// which sequence to display
 	static const char* m_szPoses[2];
@@ -1430,8 +1471,23 @@ LINK_ENTITY_TO_CLASS(monster_alien_grunt_dead, CDeadAGrunt);
 //
 void CDeadAGrunt::Spawn()
 {
-	PRECACHE_MODEL("models/agrunt.mdl");
-	SET_MODEL(ENT(pev), "models/agrunt.mdl");
+	
+	if (pev->weapons == AGRUNT_FIREBALL)
+	{
+		AGruntModel = "models/agrunt_2.mdl";
+		GibModel = "models/gibs/agrunt2_gibs.mdl";
+	}
+	if (pev->weapons == AGRUNT_PLASMARIFLE)
+	{
+		AGruntModel = "models/agrunt_3.mdl";
+		GibModel = "models/gibs/agrunt3_gibs.mdl";
+	}
+	if (pev->weapons == AGRUNT_NAKED)
+		AGruntModel = "models/agrunt_noarmor.mdl";
+
+	PRECACHE_MODEL(AGruntModel);
+	SET_MODEL(ENT(pev), AGruntModel);
+		
 
 	pev->effects = 0;
 	pev->sequence = 0;
@@ -1448,5 +1504,23 @@ void CDeadAGrunt::Spawn()
 
 	//	pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 	MonsterInitDead();
+}
+
+void CDeadAGrunt::GibMonster()
+{
+	if (pev->weapons != AGRUNT_NAKED)
+	{
+
+		const GibData AGibs = { GibModel, 0, 6, AGibLimits };
+
+		CGib::SpawnRandomGibs(pev, 6, AGibs);
+		CGib::SpawnRandomGibs(pev, 3, 0);
+
+		SetThink(&CBaseMonster::SUB_Remove);
+		pev->nextthink = gpGlobals->time;
+	}
+	else CBaseMonster::GibMonster();
+
+
 }
 

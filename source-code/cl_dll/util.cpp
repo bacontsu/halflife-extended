@@ -44,3 +44,7 @@ HSPRITE LoadSprite(const char *pszName)
 {
 	return C + (D - C) * (val - A) / (B - A);
 }*/
+
+// stub functions
+void SET_MODEL(edict_t* e, const char* model) {}
+int PRECACHE_MODEL(const char* s) { return 0; }

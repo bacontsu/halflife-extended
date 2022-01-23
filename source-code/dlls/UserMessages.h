@@ -73,6 +73,10 @@ extern int gmsgCustomIcon;
 extern int gmsgFog;
 extern int	gmsgSetSkin;
 extern int gmsgViewmodelSkin; //add by bacontsu
+extern int gmsgSetSky;// LRC
+extern int gmsgZoom;
+extern int gmsgImpact;
+
 
 
 void LinkUserMessages();

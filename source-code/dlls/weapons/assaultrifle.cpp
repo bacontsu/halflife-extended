@@ -181,7 +181,7 @@ void C556AR::ARFire(float flSpread, float flCycleTime, BOOL fUseAutoAim, int iVo
 
 void C556AR::PrimaryAttack()
 {
-	ARFire(0.01745, 0.40, FALSE, NORMAL_GUN_VOLUME);
+	ARFire(0.007, 0.25, FALSE, NORMAL_GUN_VOLUME);
 }
 
 
@@ -189,15 +189,21 @@ void C556AR::SecondaryAttack()
 {
 	EMIT_SOUND_DYN(m_pPlayer->edict(), CHAN_ITEM, "weapons/sniper_zoom.wav", VOL_NORM, ATTN_NORM, 0, 94);
 
-	if (m_pPlayer->m_iFOV == 0)
+	if (m_pPlayer->pev->fov != 0)
 	{
-		m_pPlayer->m_iFOV = 20;
-		SendWeaponAnim(AR_SCOPE);
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0; // 0 means reset to default fov
+		m_fInZoom = 0;
+#ifndef CLIENT_DLL
+		UTIL_ScreenFade(m_pPlayer, Vector(0, 0, 0), 0.5, 0.25, 255, 0);
+#endif
 	}
-	else
+	else if (m_pPlayer->pev->fov != 15)
 	{
-		m_pPlayer->m_iFOV = 0;
-		SendWeaponAnim(AR_DEPLOY);
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 15;
+		m_fInZoom = 1;
+#ifndef CLIENT_DLL
+		UTIL_ScreenFade(m_pPlayer, Vector(0, 0, 0), 0.5, 0.25, 255, 0);
+#endif
 	}
 
 	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.5;
@@ -209,7 +215,7 @@ void C556AR::Reload()
 		SecondaryAttack();
 
 	if (m_iClip < 1)
-		DefaultReload(AR_MAX_CLIP, AR_RELOAD_EMPTY, 1.5);
+		DefaultReload(AR_MAX_CLIP, AR_RELOAD_EMPTY, 2.4);
 	else
 		DefaultReload(AR_MAX_CLIP, AR_RELOAD, 1.5);
 }

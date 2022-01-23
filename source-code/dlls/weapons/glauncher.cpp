@@ -73,10 +73,10 @@ void CGLauncher::Reload()
 {
 	int iResult;
 
-	if (m_iClip == 0)
-		iResult = DefaultReload(M79_MAX_CLIP, GL_RELOAD_EMPTY, 1.5);
+	if (m_iClip <= 0)
+		iResult = DefaultReload(M79_MAX_CLIP, GL_RELOAD_EMPTY, 2.6);
 	else
-		iResult = DefaultReload(M79_MAX_CLIP, GL_RELOAD, 1.5);
+		iResult = DefaultReload(M79_MAX_CLIP, GL_RELOAD, 2);
 
 	if (iResult)
 	{

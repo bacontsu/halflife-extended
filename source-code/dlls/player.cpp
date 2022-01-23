@@ -137,38 +137,11 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD(CBasePlayer, m_flLastClimbTime, FIELD_TIME),
 	DEFINE_FIELD(CBasePlayer, m_bIsClimbing, FIELD_BOOLEAN),
 	DEFINE_FIELD(CBasePlayer, m_pHoldable, FIELD_EHANDLE),
+	
 
 
 	//Vanilla Op4 doesn't restore this. Not a big deal but it can cause you to teleport to the wrong area after a restore
 	DEFINE_FIELD(CBasePlayer, m_DisplacerReturn, FIELD_POSITION_VECTOR),
-	//DEFINE_FIELD( CBasePlayer, m_flDisplacerSndRoomtype, FIELD_FLOAT ),
-
-	//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
-	//DEFINE_FIELD( CBasePlayer, m_fGameHUDInitialized, FIELD_INTEGER ), // only used in multiplayer games
-	//DEFINE_FIELD( CBasePlayer, m_flStopExtraSoundTime, FIELD_TIME ),
-	//DEFINE_FIELD( CBasePlayer, m_fKnownItem, FIELD_INTEGER ), // reset to zero on load
-	//DEFINE_FIELD( CBasePlayer, m_iPlayerSound, FIELD_INTEGER ),	// Don't restore, set in Precache()
-	//DEFINE_FIELD( CBasePlayer, m_pentSndLast, FIELD_EDICT ),	// Don't restore, client needs reset
-	//DEFINE_FIELD( CBasePlayer, m_flSndRoomtype, FIELD_FLOAT ),	// Don't restore, client needs reset
-	//DEFINE_FIELD( CBasePlayer, m_flSndRange, FIELD_FLOAT ),	// Don't restore, client needs reset
-	//DEFINE_FIELD( CBasePlayer, m_fNewAmmo, FIELD_INTEGER ), // Don't restore, client needs reset
-	//DEFINE_FIELD( CBasePlayer, m_flgeigerRange, FIELD_FLOAT ),	// Don't restore, reset in Precache()
-	//DEFINE_FIELD( CBasePlayer, m_flgeigerDelay, FIELD_FLOAT ),	// Don't restore, reset in Precache()
-	//DEFINE_FIELD( CBasePlayer, m_igeigerRangePrev, FIELD_FLOAT ),	// Don't restore, reset in Precache()
-	//DEFINE_FIELD( CBasePlayer, m_iStepLeft, FIELD_INTEGER ), // Don't need to restore
-	//DEFINE_ARRAY( CBasePlayer, m_szTextureName, FIELD_CHARACTER, CBTEXTURENAMEMAX ), // Don't need to restore
-	//DEFINE_FIELD( CBasePlayer, m_chTextureType, FIELD_CHARACTER ), // Don't need to restore
-	//DEFINE_FIELD( CBasePlayer, m_fNoPlayerSound, FIELD_BOOLEAN ), // Don't need to restore, debug
-	//DEFINE_FIELD( CBasePlayer, m_iUpdateTime, FIELD_INTEGER ), // Don't need to restore
-	//DEFINE_FIELD( CBasePlayer, m_iClientHealth, FIELD_INTEGER ), // Don't restore, client needs reset
-	//DEFINE_FIELD( CBasePlayer, m_iClientBattery, FIELD_INTEGER ), // Don't restore, client needs reset
-	//DEFINE_FIELD( CBasePlayer, m_iClientHideHUD, FIELD_INTEGER ), // Don't restore, client needs reset
-	//DEFINE_FIELD( CBasePlayer, m_fWeapon, FIELD_BOOLEAN ),  // Don't restore, client needs reset
-	//DEFINE_FIELD( CBasePlayer, m_nCustomSprayFrames, FIELD_INTEGER ), // Don't restore, depends on server message after spawning and only matters in multiplayer
-	//DEFINE_FIELD( CBasePlayer, m_vecAutoAim, FIELD_VECTOR ), // Don't save/restore - this is recomputed
-	//DEFINE_ARRAY( CBasePlayer, m_rgAmmoLast, FIELD_INTEGER, MAX_AMMO_SLOTS ), // Don't need to restore
-	//DEFINE_FIELD( CBasePlayer, m_fOnTarget, FIELD_BOOLEAN ), // Don't need to restore
-	//DEFINE_FIELD( CBasePlayer, m_nCustomSprayFrames, FIELD_INTEGER ), // Don't need to restore
 
 };
 
@@ -1310,6 +1283,7 @@ void CBasePlayer::PlayerDeathThink()
 		// will sometimes crash coming back from CBasePlayer::Killed() if they kill their owner because the
 		// player class sometimes is freed. It's safer to manipulate the weapons once we know
 		// we aren't calling into any of their code anymore through the player pointer.
+
 		PackDeadPlayerItems();
 	}
 
@@ -4330,6 +4304,10 @@ void CBasePlayer::UpdateClientData()
 		WRITE_BYTE(m_iFOV);
 		MESSAGE_END();
 
+		MESSAGE_BEGIN(MSG_ONE, gmsgZoom, NULL, pev);
+		WRITE_BYTE(0);
+		MESSAGE_END();
+
 		// cache FOV change at end of function, so weapon updates can see that FOV has changed
 	}
 
@@ -4450,6 +4428,7 @@ void CBasePlayer::UpdateClientData()
 	}
 
 
+
 	if (m_iTrain & TRAIN_NEW)
 	{
 		ASSERT(gmsgTrain > 0);
@@ -4530,6 +4509,13 @@ void CBasePlayer::UpdateClientData()
 		WRITE_BYTE(0);
 		WRITE_BYTE(0);
 		WRITE_BYTE(0);
+		MESSAGE_END();
+	}
+
+	if (m_iFOV != 0 && m_iFOV != 40)
+	{
+		MESSAGE_BEGIN(MSG_ONE, gmsgZoom, NULL, pev);
+		WRITE_BYTE(1);
 		MESSAGE_END();
 	}
 
@@ -5090,6 +5076,7 @@ void CBasePlayer::DropPlayerItem(char* pszItemName)
 				}
 
 			}
+
 
 			return;// we're done, so stop searching with the FOR loop.
 		}

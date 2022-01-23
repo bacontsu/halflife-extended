@@ -29,6 +29,7 @@
 #include "animation.h"
 #include "weapons.h"
 #include "func_break.h"
+#include "player.h"
 
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 extern DLL_GLOBAL int			g_iSkillLevel;
@@ -129,26 +130,6 @@ void CGib::SpawnHeadGib(entvars_t* pevVictim)
 	if (g_Language == LANGUAGE_GERMAN)
 	{
 		pGib->Spawn("models/germangibs.mdl");// throw one head
-		pGib->pev->body = 0;
-	}
-	if (FClassnameIs(pevVictim, "monster_bullchicken"))
-	{
-		pGib->Spawn("models/gibs/bullsquid_gibs.mdl");// throw one head
-		pGib->pev->body = 0;
-	}
-	if (FClassnameIs(pevVictim, "monster_alien_slave"))
-	{
-		pGib->Spawn("models/gibs/vortigaunt_gibs.mdl");// throw one head
-		pGib->pev->body = 0;
-	}
-	if (FClassnameIs(pevVictim, "monster_houndeye"))
-	{
-		pGib->Spawn("models/gibs/houndeye_gibs.mdl");// throw one head
-		pGib->pev->body = 0;
-	}
-	if (FClassnameIs(pevVictim, "monster_headcrab"))
-	{
-		pGib->Spawn("models/gibs/headcrab_gibs.mdl");// throw one head
 		pGib->pev->body = 0;
 	}
 
@@ -307,14 +288,15 @@ void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, int human)
 
 BOOL CBaseMonster::HasHumanGibs()
 {
-	int myClass = Classify();
+	//int myClass = Classify();
 
-	if (myClass == CLASS_HUMAN_MILITARY ||
+	/*if (myClass == CLASS_HUMAN_MILITARY ||
 		myClass == CLASS_PLAYER_ALLY ||
 		myClass == CLASS_HUMAN_PASSIVE ||
 		myClass == CLASS_PLAYER ||
-		myClass == CLASS_HUMAN_MILITARY_FRIENDLY)
+		myClass == CLASS_HUMAN_MILITARY_FRIENDLY)*/
 
+	if(m_bloodColor == BLOOD_COLOR_RED)
 		return TRUE;
 
 	return FALSE;
@@ -323,17 +305,18 @@ BOOL CBaseMonster::HasHumanGibs()
 
 BOOL CBaseMonster::HasAlienGibs()
 {
-	int myClass = Classify();
+	//int myClass = Classify();
 
-	if (myClass == CLASS_ALIEN_MILITARY ||
+	/*if (myClass == CLASS_ALIEN_MILITARY ||
 		myClass == CLASS_ALIEN_MONSTER ||
 		myClass == CLASS_ALIEN_PASSIVE ||
 		myClass == CLASS_INSECT ||
 		myClass == CLASS_ALIEN_PREDATOR ||
 		myClass == CLASS_ALIEN_PREY ||
 		myClass == CLASS_CHUMTOAD ||
-		myClass == CLASS_ALIEN_RACE_X)
+		myClass == CLASS_ALIEN_RACE_X)*/
 
+	if (m_bloodColor == BLOOD_COLOR_YELLOW || m_bloodColor == BLOOD_COLOR_GREEN)
 		return TRUE;
 
 	return FALSE;
@@ -770,40 +753,85 @@ void CGib::BounceGibTouch(CBaseEntity* pOther)
 	Vector	vecSpot;
 	TraceResult	tr;
 
-	//if ( RANDOM_LONG(0,1) )
-	//	return;// don't bleed everytime
+	switch (RANDOM_LONG(0, 6))
+	{
+	case 0:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh1.wav", 0.55, ATTN_NORM);	break;
 
-	if (pev->flags & FL_ONGROUND)
+	case 1:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh2.wav", 0.55, ATTN_NORM);	break;
+
+	case 2:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh3.wav", 0.55, ATTN_NORM);	break;
+
+	case 3:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh4.wav", 0.55, ATTN_NORM);	break;
+
+	case 4:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh5.wav", 0.55, ATTN_NORM);	break;
+
+	case 5:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh6.wav", 0.55, ATTN_NORM);	break;
+
+	case 6:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh7.wav", 0.55, ATTN_NORM);	break;
+	}
+	
+
+	if (pev->flags & FL_ONGROUND)	
 	{
 		pev->velocity = pev->velocity * 0.9;
+		
 		pev->angles.x = 0;
+		
 		pev->angles.z = 0;
+		
 		pev->avelocity.x = 0;
+		
 		pev->avelocity.z = 0;
 	}
-	else
+	else	
 	{
 		if (g_Language != LANGUAGE_GERMAN && m_cBloodDecals > 0 && m_bloodColor != DONT_BLEED)
+			
 		{
+			
 			vecSpot = pev->origin + Vector(0, 0, 8);//move up a bit, and trace down.
+			
 			UTIL_TraceLine(vecSpot, vecSpot + Vector(0, 0, -24), ignore_monsters, ENT(pev), &tr);
-
+			
+			
 			UTIL_BloodDecalTrace(&tr, m_bloodColor);
+			
+			UTIL_BloodDrips(vecSpot, vecSpot, m_bloodColor, 5);
+			
+			
+			if (m_bloodColor == BLOOD_COLOR_RED)
+			{
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), 71, RANDOM_LONG(100, 250));
+			}
+			else
+			{
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), m_bloodColor, RANDOM_LONG(100, 250));
+			}
 
 			m_cBloodDecals--;
+			
 		}
+		
 
+		
 		if (m_material != matNone && RANDOM_LONG(0, 2) == 0)
+			
 		{
+			
 			float volume;
+			
 			float zvel = fabs(pev->velocity.z);
-
+			
 			volume = 0.8 * V_min(1.0, ((float)zvel) / 450.0);
-
+			
 			CBreakable::MaterialSoundRandom(edict(), (Materials)m_material, volume);
+			
 		}
+			
 	}
+	
 }
+
 
 //
 // Sticky gib puts blood on the wall and stays put. 
@@ -1417,6 +1445,118 @@ void CBaseMonster::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector ve
 	}
 }
 
+int TraceTexturetype(Vector vecSrc, Vector vecEnd, CBaseEntity* pEntity)
+
+{
+	char chTextureType;
+
+	const char* pTextureName;
+
+	float rgfl1[3];
+
+	float rgfl2[3];
+
+	char szbuffer[64];
+
+	vecSrc.CopyToArray(rgfl1);
+
+	vecEnd.CopyToArray(rgfl2);
+
+	chTextureType = 0;
+	if (pEntity)
+		pTextureName = TRACE_TEXTURE(ENT(pEntity->pev), rgfl1, rgfl2);
+	else
+		pTextureName = TRACE_TEXTURE(ENT(0), rgfl1, rgfl2);
+	if (pTextureName)
+	{
+		if (*pTextureName == '-' || *pTextureName == '+')
+			pTextureName += 2;
+		if (*pTextureName == '{' || *pTextureName == '!' || *pTextureName == '~' || *pTextureName == ' ')
+			pTextureName++;
+		strcpy(szbuffer, pTextureName);
+		szbuffer[CBTEXTURENAMEMAX - 1] = 0;
+		chTextureType = TEXTURETYPE_Find(szbuffer);
+	}
+	return chTextureType;
+}
+void ImpactBullet(TraceResult* ptr, Vector vecSrc, Vector vecEnd)
+{
+	int Material;
+	CBaseEntity* pEntity = CBaseEntity::Instance(ptr->pHit);
+	int chTextureType = TraceTexturetype(vecSrc, vecEnd, pEntity);
+	if (pEntity && pEntity->Classify() != CLASS_NONE && pEntity->Classify() != CLASS_MACHINE)
+	{
+		chTextureType = CHAR_TEX_FLESH;
+	}
+	switch (chTextureType)
+	{
+	default:
+	case CHAR_TEX_CONCRETE:
+		Material = 0;
+		break;
+
+	case CHAR_TEX_GRATE:
+		Material = 1;
+		break;
+
+	case CHAR_TEX_METAL:
+		Material = 1;
+		break;
+
+	case CHAR_TEX_DIRT:
+		Material = 3;
+		break;
+
+	case CHAR_TEX_VENT:
+		Material = 1;
+		break;
+
+	case CHAR_TEX_TILE:
+		Material = 0;
+		break;
+
+	case CHAR_TEX_WOOD:
+		Material = 2;
+		break;
+
+	case CHAR_TEX_GLASS:
+		Material = 4;
+		break;
+
+	case CHAR_TEX_COMPUTER:
+		Material = 5;
+		break;
+
+	}
+
+	if (chTextureType != CHAR_TEX_FLESH)
+	{
+
+		MESSAGE_BEGIN(MSG_ALL, gmsgImpact);
+
+		WRITE_SHORT(Material);
+
+		WRITE_BYTE(1);
+
+		WRITE_COORD(ptr->vecEndPos.x);
+
+		WRITE_COORD(ptr->vecEndPos.y);
+
+		WRITE_COORD(ptr->vecEndPos.z);
+
+
+
+		WRITE_COORD(ptr->vecPlaneNormal.x);
+
+		WRITE_COORD(ptr->vecPlaneNormal.y);
+
+		WRITE_COORD(ptr->vecPlaneNormal.z);
+
+		MESSAGE_END();
+
+	}
+}
+
 /*
 ================
 FireBullets
@@ -1485,15 +1625,24 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 				WRITE_COORD(vecTracerSrc.x);
 				WRITE_COORD(vecTracerSrc.y);
 				WRITE_COORD(vecTracerSrc.z);
-				WRITE_COORD(tr.vecEndPos.x);
-				WRITE_COORD(tr.vecEndPos.y);
-				WRITE_COORD(tr.vecEndPos.z);
+				if (g_engfuncs.pfnPointContents(tr.vecEndPos) != CONTENT_SKY)
+				{
+					WRITE_COORD(tr.vecEndPos.x);
+					WRITE_COORD(tr.vecEndPos.y);
+					WRITE_COORD(tr.vecEndPos.z);
+				}
+				else
+				{
+					WRITE_COORD(vecEnd.x);
+					WRITE_COORD(vecEnd.y);
+					WRITE_COORD(vecEnd.z);
+				}
 				MESSAGE_END();
 				break;
 			}
 		}
 		// do damage, paint decals
-		if (tr.flFraction != 1.0)
+		if (tr.flFraction != 1.0 && g_engfuncs.pfnPointContents(tr.vecEndPos) != CONTENT_SKY)
 		{
 			CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
 
@@ -1581,6 +1730,8 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 
 				break;
 			}
+
+			ImpactBullet(&tr, vecSrc, vecEnd);
 		}
 		// make bullet trails
 		UTIL_BubbleTrail(vecSrc, tr.vecEndPos, (flDistance * tr.flFraction) / 64.0);
@@ -1694,7 +1845,7 @@ Vector CBaseEntity::FireBulletsPlayer(ULONG cShots, Vector vecSrc, Vector vecDir
 		UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(pev)/*pentIgnore*/, &tr);
 
 		// do damage, paint decals
-		if (tr.flFraction != 1.0)
+		if (tr.flFraction != 1.0 && g_engfuncs.pfnPointContents(tr.vecEndPos) != CONTENT_SKY)
 		{
 			CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
 
@@ -1783,6 +1934,9 @@ Vector CBaseEntity::FireBulletsPlayer(ULONG cShots, Vector vecSrc, Vector vecDir
 
 				break;
 			}
+
+			ImpactBullet(&tr, vecSrc, vecEnd);
+
 		}
 		// make bullet trails
 		UTIL_BubbleTrail(vecSrc, tr.vecEndPos, (flDistance * tr.flFraction) / 64.0);
@@ -1913,3 +2067,4 @@ void CBaseMonster::MakeDamageBloodDecal(int cCount, float flNoise, TraceResult* 
 		}
 	}
 }
+

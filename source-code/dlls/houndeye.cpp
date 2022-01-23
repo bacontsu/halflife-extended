@@ -1320,11 +1320,19 @@ Schedule_t *CHoundeye :: GetSchedule()
 	return CSquadMonster :: GetSchedule();
 }
 
-const GibData HoundGibs = { "models/gibs/houndeye_gibs.mdl", 1, 6 };
+const GibLimit HoundGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+};
+const GibData HoundGibs = { "models/gibs/houndeye_gibs.mdl", 0, 6, HoundGibLimits };
 void CHoundeye::GibMonster()
 {
-	CGib::SpawnHeadGib(pev);
-	CGib::SpawnRandomGibs(pev, 4, HoundGibs);	// Throw alien gibs
+	CGib::SpawnRandomGibs(pev, 6, HoundGibs);	// Throw alien gibs
 
 	SetThink(&CBaseMonster::SUB_Remove);
 	pev->nextthink = gpGlobals->time;
@@ -1396,8 +1404,7 @@ void CDeadHoundeye::Spawn()
 
 void CDeadHoundeye::GibMonster()
 {
-	CGib::SpawnHeadGib(pev);
-	CGib::SpawnRandomGibs(pev, 4, HoundGibs);	// Throw alien gibs
+	CGib::SpawnRandomGibs(pev, 6, HoundGibs);	// Throw alien gibs
 
 	SetThink(&CBaseMonster::SUB_Remove);
 	pev->nextthink = gpGlobals->time;

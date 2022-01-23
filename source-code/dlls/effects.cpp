@@ -2604,3 +2604,39 @@ BOOL CEnvFog::CheckBBox(edict_t* pplayer, edict_t* pedict)
 
 	return FALSE;
 }
+
+//=========================================================
+// LRC - env_sky, an unreal tournament-style sky effect
+//=========================================================
+class CEnvSky : public CBaseEntity
+	
+{
+	
+public:
+	
+	void Activate(void);
+	
+	void Think(void);
+	
+};
+void CEnvSky::Activate(void)
+{
+	
+	pev->effects |= EF_NODRAW;
+	
+	pev->nextthink = gpGlobals->time + 1;
+}
+void CEnvSky::Think()
+{
+	
+	MESSAGE_BEGIN(MSG_BROADCAST, gmsgSetSky, NULL);
+	WRITE_BYTE(1); // mode
+	WRITE_COORD(pev->origin.x); // view position
+	WRITE_COORD(pev->origin.y);
+	WRITE_COORD(pev->origin.z);
+	MESSAGE_END();
+
+	ALERT(at_console, "env_sky messaged\n");
+
+}
+LINK_ENTITY_TO_CLASS(env_sky, CEnvSky);

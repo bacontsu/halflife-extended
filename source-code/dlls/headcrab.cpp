@@ -153,11 +153,20 @@ const char *CHeadCrab::pBiteSounds[] =
 	"headcrab/hc_headbite.wav",
 };
 
-const GibData CrabGibs = { "models/gibs/headcrab_gibs.mdl", 1, 7 };
+const GibLimit CrabGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+};
+const GibData CrabGibs = { "models/gibs/headcrab_gibs.mdl", 0, 7, CrabGibLimits };
 void CHeadCrab::GibMonster()
 {
-	CGib::SpawnHeadGib(pev);
-	CGib::SpawnRandomGibs(pev, 6, CrabGibs);	// Throw alien gibs
+	CGib::SpawnRandomGibs(pev, 7, CrabGibs);	// Throw alien gibs
 
 	SetThink(&CBaseMonster::SUB_Remove);
 	pev->nextthink = gpGlobals->time;

@@ -244,6 +244,7 @@ public:
 	float m_flNextPainTime;
 	float m_flLastEnemySightTime;
 	float m_flNextRocketCheck;
+	float nextShootUpdate = 0.0f;
 	int m_Body;
 
 	Vector	m_vecTossVelocity;
@@ -267,8 +268,6 @@ public:
 
 	static const char *pGruntSentences[];
 
-	float nextShootUpdate = 0.0f;
-
 	int m_iWeaponIdx;
 	int m_iGruntHead;
 };
@@ -288,12 +287,12 @@ TYPEDESCRIPTION	CHGrunt::m_SaveData[] =
 	DEFINE_FIELD( CHGrunt, m_fFirstEncounter, FIELD_BOOLEAN ),
 	DEFINE_FIELD( CHGrunt, m_cClipSize, FIELD_INTEGER ),
 	DEFINE_FIELD( CHGrunt, m_voicePitch, FIELD_INTEGER ),
-	DEFINE_FIELD(CHGrunt, m_iWeaponIdx, FIELD_INTEGER),
-	DEFINE_FIELD(CHGrunt, m_iGruntHead, FIELD_INTEGER),
+	//DEFINE_FIELD(CHGrunt, m_iWeaponIdx, FIELD_INTEGER),
+	//DEFINE_FIELD(CHGrunt, m_iGruntHead, FIELD_INTEGER),
 //  DEFINE_FIELD( CShotgun, m_iBrassShell, FIELD_INTEGER ),
 //  DEFINE_FIELD( CShotgun, m_iShotgunShell, FIELD_INTEGER ),
-	DEFINE_FIELD( CHGrunt, m_iSentence, FIELD_INTEGER ),
 	DEFINE_FIELD(CHGrunt, nextShootUpdate, FIELD_FLOAT),
+	DEFINE_FIELD( CHGrunt, m_iSentence, FIELD_INTEGER ),
 };
 
 IMPLEMENT_SAVERESTORE( CHGrunt, CSquadMonster );
@@ -1040,7 +1039,7 @@ void CHGrunt::ShootRifle()
 
 	pev->effects |= EF_MUZZLEFLASH;
 
-	m_cAmmoLoaded = 0;// take away a bullet!
+	m_cAmmoLoaded = 0;// reload right now
 
 	Vector angDir = UTIL_VecToAngles(vecShootDir);
 	SetBlending(0, angDir.x);
@@ -1203,7 +1202,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case HGRUNT_AE_GREN_DROP:
 		{
 			UTIL_MakeVectors( pev->angles );
-			CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 17 - gpGlobals->v_right * 27 + gpGlobals->v_up * 6, g_vecZero, 3 );
+			CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 17 - gpGlobals->v_right * 27 + gpGlobals->v_up * 6, gpGlobals->v_forward * 30 + pev->velocity, 3 );
 		}
 		break;
 

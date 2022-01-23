@@ -1052,7 +1052,7 @@ void COFMedicAlly :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case MEDIC_AE_GREN_DROP:
 		{
 			UTIL_MakeVectors( pev->angles );
-			CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 17 - gpGlobals->v_right * 27 + gpGlobals->v_up * 6, g_vecZero, 3 );
+			CGrenade::ShootTimed(pev, pev->origin + gpGlobals->v_forward * 17 - gpGlobals->v_right * 27 + gpGlobals->v_up * 6, gpGlobals->v_forward * 30 + pev->velocity, 3);
 		}
 		break;
 

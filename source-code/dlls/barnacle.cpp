@@ -47,6 +47,8 @@ public:
 	int		Restore( CRestore &restore ) override;
 	static	TYPEDESCRIPTION m_SaveData[];
 
+	int IRelationship(CBaseEntity* pTarget) override;
+
 	float m_flAltitude;
 	float m_flKillVictimTime;
 	int	  m_cGibs;// barnacle loads up on gibs each time it kills something.
@@ -76,6 +78,21 @@ IMPLEMENT_SAVERESTORE( CBarnacle, CBaseMonster );
 int	CBarnacle :: Classify ()
 {
 	return	CLASS_BARNACLE;
+}
+
+int	CBarnacle::IRelationship(CBaseEntity* pTarget)
+{
+	//don't pull up these folks
+	if (FClassnameIs(pTarget->pev, "monster_ichthyosaur") ||
+		(FClassnameIs(pTarget->pev, "monster_archer")) ||
+		(FClassnameIs(pTarget->pev, "monster_leech")) ||
+		(FClassnameIs(pTarget->pev, "monster_tentacle")) ||
+		(FClassnameIs(pTarget->pev, "monster_gargantua"))
+		)
+	{
+		return R_NO;
+	}
+	else return CBaseMonster::IRelationship(pTarget);
 }
 
 //=========================================================

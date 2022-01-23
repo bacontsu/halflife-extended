@@ -664,6 +664,26 @@ public:
 
 };
 
+class CHudZoom : public CHudBase
+{
+public:
+	int Init(void);
+	int VidInit(void);
+	int Draw(float flTime);
+	int MsgFunc_ZoomHUD(const char* pszName, int iSize, void* pbuf);
+	int m_iHudMode;
+private:
+	HSPRITE m_hBottom_Left;
+	HSPRITE m_hBottom_Right;
+	HSPRITE m_hTop_Left;
+	HSPRITE m_hTop_Right;
+	HSPRITE m_hBlack;
+};
+
+//LRC - for the moment, skymode has only two settings
+#define SKY_OFF 0
+#define SKY_ON  1
+
 class CHud
 {
 private:
@@ -693,6 +713,8 @@ public:
 	int		m_iRes;
 	int m_iSkin;
 
+	
+
 	cvar_t* m_pCvarStealMouse;
 	cvar_t* m_pCvarDraw;
 
@@ -704,12 +726,18 @@ public:
 	float mouse_y;
 	float velz;
 
+	bool isThirdPerson;
+
+
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b);
 	int DrawHudString(int x, int y, int iMaxX, char* szString, int r, int g, int b);
 	int DrawHudStringReverse(int xpos, int ypos, int iMinX, char* szString, int r, int g, int b);
 	int DrawHudNumberString(int xpos, int ypos, int iMinX, int iNumber, int r, int g, int b);
 	int GetNumWidth(int iNumber, int iFlags);
+
+	Vector	m_vecSkyPos; //LRC
+	int		m_iSkyMode;  //LRC
 
 	int GetHudNumberWidth(int number, int width, int flags);
 	int DrawHudNumberReverse(int x, int y, int number, int flags, int r, int g, int b);
@@ -753,6 +781,7 @@ public:
 	CHudTextMessage m_TextMessage;
 	CHudStatusIcons m_StatusIcons;
 	CHudBenchmark	m_Benchmark;
+	CHudZoom m_Zoom;
 
 	CHudFlagIcons m_FlagIcons;
 	CHudPlayerBrowse m_PlayerBrowse;
@@ -775,10 +804,14 @@ public:
 	void _cdecl MsgFunc_ViewMode(const char* pszName, int iSize, void* pbuf);
 	int _cdecl MsgFunc_SetFOV(const char* pszName, int iSize, void* pbuf);
 	int  _cdecl MsgFunc_Concuss(const char* pszName, int iSize, void* pbuf);
+	void _cdecl MsgFunc_SetSky(const char* pszName, int iSize, void* pbuf);		//LRC
 	void _cdecl MsgFunc_SetSkin(const char* pszName, int iSize, void* pbuf);
 	int _cdecl MsgFunc_WpnSkn(const char* pszName, int iSize, void* pbuf); //add by bacontsu
-	int _cdecl MsgFunc_WaterSplash(const char* pszName, int iSize, void* pbuf); //
+	int _cdecl MsgFunc_WaterSplash(const char* pszName, int iSize, void* pbuf);
 	int _cdecl MsgFunc_DropMag(const char* pszName, int iSize, void* pbuf);
+	int _cdecl MsgFunc_Impact(const char* pszName, int iSize, void* pbuf);
+
+	
 
 
 	// Screen information

@@ -241,6 +241,7 @@ void CCrossbow::Precache()
 
 	PRECACHE_SOUND("weapons/xbow_fire1.wav");
 	PRECACHE_SOUND("weapons/xbow_reload1.wav");
+	PRECACHE_SOUND("weapons/sniper_zoom.wav");
 
 	UTIL_PrecacheOther( "crossbow_bolt" );
 
@@ -426,13 +427,20 @@ void CCrossbow::FireBolt()
 
 void CCrossbow::SecondaryAttack()
 {
-	if ( m_pPlayer->m_iFOV != 0 )
+	EMIT_SOUND_DYN(m_pPlayer->edict(), CHAN_ITEM, "weapons/sniper_zoom.wav", VOL_NORM, ATTN_NORM, 0, 94);
+	if (m_pPlayer->pev->fov != 0)
 	{
-		m_pPlayer->m_iFOV = 0; // 0 means reset to default fov
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 0; // 0 means reset to default fov
+#ifndef CLIENT_DLL
+		UTIL_ScreenFade(m_pPlayer, Vector(0, 0, 0), 0.5, 0.25, 255, 0);
+#endif
 	}
-	else if ( m_pPlayer->m_iFOV != 20 )
+	else if (m_pPlayer->pev->fov != 20)
 	{
-		m_pPlayer->m_iFOV = 20;
+		m_pPlayer->pev->fov = m_pPlayer->m_iFOV = 20;
+#ifndef CLIENT_DLL
+		UTIL_ScreenFade(m_pPlayer, Vector(0, 0, 0), 0.5, 0.25, 255, 0);
+#endif
 	}
 	
 	pev->nextthink = UTIL_WeaponTimeBase() + 0.1;

@@ -310,8 +310,8 @@ void BodyTestCallback(struct tempent_s* ent, float frametime, float currenttime)
 			ent->entity.curstate.weaponmodel = NULL;
 			player->curstate.weaponmodel = NULL;
 			AngleVectors(player->angles, forward, NULL, NULL);
-			ent->entity.origin = player->origin - forward * 15;
-			ent->die = gEngfuncs.GetClientTime() + gHUD.m_flTimeDelta;
+			ent->entity.origin = ent->entity.origin - forward * 20;
+			ent->die = gEngfuncs.GetClientTime();
 		}
 }
 
@@ -353,7 +353,15 @@ Gives us a chance to add additional entities to the render this frame
 */
 void DLLEXPORT HUD_CreateEntities()
 {
-	if(CVAR_GET_FLOAT("cl_showplayer") == 1 && gHUD.m_flTimeDelta > 0 && CVAR_GET_FLOAT("developer") == 0)
+	// CLIENTSIDE PLAYER MODEL
+	cl_entity_t* player = gEngfuncs.GetLocalPlayer();
+
+	if (gHUD.isThirdPerson)
+		player->model = gEngfuncs.CL_LoadModel("models/player.mdl", 0);
+	else if (!gHUD.isThirdPerson)
+		player->model = gEngfuncs.CL_LoadModel("models/Body1.mdl", 0);
+
+	if(CVAR_GET_FLOAT("cl_showplayer") == 1 && gHUD.m_flTimeDelta > 0 && CVAR_GET_FLOAT("developer") == 0 && !gHUD.isThirdPerson)
 	BodyTest();
 
 //	RecClCreateEntities();

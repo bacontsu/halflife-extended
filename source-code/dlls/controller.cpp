@@ -213,7 +213,18 @@ void CController::Killed( entvars_t *pevAttacker, int iGib )
 	CSquadMonster::Killed( pevAttacker, iGib );
 }
 
-const GibData EggheadGibs = { "models/gibs/gibs_controller.mdl", 0, 6 };
+const GibLimit EggheadGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+};
+
+const GibData EggheadGibs = { "models/gibs/gibs_controller.mdl", 0, 7, EggheadGibLimits };
 void CController::GibMonster()
 {
 	// delete balls		<- cruel as shit lmao

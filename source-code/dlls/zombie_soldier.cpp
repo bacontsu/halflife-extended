@@ -113,7 +113,12 @@ const char *CZombieSoldier::pPainSounds[] =
 	"zombie/zo_pain2.wav",
 };
 
-const GibData ZombGibs = { "models/gibs/gibs_zombie.mdl", 0, 2 };
+const GibLimit ZombGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+};
+const GibData ZombGibs = { "models/gibs/gibs_zombie.mdl", 0, 2, ZombGibLimits };
 void CZombieSoldier::GibMonster()
 {
 	CGib::SpawnRandomGibs(pev, 2, ZombGibs);
@@ -392,6 +397,8 @@ public:
 	void Spawn() override;
 	int	Classify() override { return	CLASS_ALIEN_MONSTER; }
 
+	void GibMonster();
+
 	void KeyValue( KeyValueData *pkvd ) override;
 
 	int	m_iPose;// which sequence to display	-- temporary, don't need to save
@@ -442,5 +449,12 @@ void CDeadZombieSoldier::Spawn()
 	pev->health = 8;
 
 	MonsterInitDead();
+}
+
+void CDeadZombieSoldier::GibMonster()
+{
+	CGib::SpawnRandomGibs(pev, 2, ZombGibs);
+
+	CBaseMonster::GibMonster();
 }
 

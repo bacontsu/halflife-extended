@@ -123,6 +123,7 @@ namespace BarneyGun
 #define		BARNEY_AE_DRAW		( 2 )
 #define		BARNEY_AE_SHOOT		( 3 )
 #define		BARNEY_AE_HOLSTER	( 4 )
+#define		BARNEY_AE_RELOAD	( 5 )
 
 #define	BARNEY_BODY_GUNHOLSTERED	0
 #define	BARNEY_BODY_GUNDRAWN		1
@@ -182,6 +183,9 @@ public:
 	int m_BarneyVest;
 	int m_BarneyGlasses;
 
+	int m_iClipSize;
+
+
 	// UNDONE: What is this for?  It isn't used?
 	float	m_flPlayerDamage;// how much pain has the player inflicted on me?
 
@@ -197,6 +201,7 @@ TYPEDESCRIPTION	CBarney::m_SaveData[] =
 	DEFINE_FIELD(CBarney, m_checkAttackTime, FIELD_TIME),
 	DEFINE_FIELD(CBarney, m_lastAttackCheck, FIELD_BOOLEAN),
 	DEFINE_FIELD(CBarney, m_flPlayerDamage, FIELD_FLOAT),
+	DEFINE_FIELD(CBarney, m_iClipSize, FIELD_FLOAT),
 };
 
 IMPLEMENT_SAVERESTORE(CBarney, CTalkMonster);
@@ -518,6 +523,7 @@ void CBarney::BarneyFirePistol()
 
 	// UNDONE: Reload?
 	m_cAmmoLoaded--;// take away a bullet!
+
 }
 
 void CBarney::BarneyFire357()
@@ -546,8 +552,9 @@ void CBarney::BarneyFire357()
 
 	CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
 
-	// UNDONE: Reload?
+	
 	m_cAmmoLoaded--;// take away a bullet!
+
 }
 
 void CBarney::BarneyFireDeagle()
@@ -578,6 +585,7 @@ void CBarney::BarneyFireDeagle()
 
 	// UNDONE: Reload?
 	m_cAmmoLoaded--;// take away a bullet!
+
 }
 
 //=========================================================
@@ -591,76 +599,84 @@ void CBarney::HandleAnimEvent(MonsterEvent_t* pEvent)
 	switch (pEvent->event)
 	{
 	case BARNEY_AE_SHOOT:
+	{
+		if (pev->weapons == BARNEY_GLOCK)
 		{
-			if (pev->weapons == BARNEY_GLOCK)
-			{
-				BarneyFirePistol();
-				break;
-			}
-
-
-			if (pev->weapons == BARNEY_357)
-			{
-				BarneyFire357();
-				break;
-			}
-
-			if (pev->weapons == BARNEY_DEAGLE)
-			{
-				BarneyFireDeagle();
-				break;
-			}
-
-			if (pev->weapons == BARNEY_NOGUN)
-			{
-				break;
-			}
+			BarneyFirePistol();
+			break;
 		}
-		break;
+
+
+		if (pev->weapons == BARNEY_357)
+		{
+			BarneyFire357();
+			break;
+		}
+
+		if (pev->weapons == BARNEY_DEAGLE)
+		{
+			BarneyFireDeagle();
+			break;
+		}
+
+		if (pev->weapons == BARNEY_NOGUN)
+		{
+			break;
+		}
+	}
+	break;
 
 	case BARNEY_AE_DRAW:
+	{
+		// barney's bodygroup switches here so he can pull gun from holster
+		if (pev->weapons == BARNEY_GLOCK)
 		{
-			// barney's bodygroup switches here so he can pull gun from holster
-			if (pev->weapons == BARNEY_GLOCK)
-			{
-				SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Glock_drawn);
-				m_BarneyGun = BarneyGun::Glock_drawn;
-			}
-			if (pev->weapons == BARNEY_357)
-			{
-				SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Python_drawn);
-				m_BarneyGun = BarneyGun::Python_drawn;
-			}
-			if (pev->weapons == BARNEY_DEAGLE)
-			{
-				SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Deagle_drawn);
-				m_BarneyGun = BarneyGun::Deagle_drawn;
-			}
-			m_fGunDrawn = TRUE;
+			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Glock_drawn);
+			m_BarneyGun = BarneyGun::Glock_drawn;
 		}
-		break;
+		if (pev->weapons == BARNEY_357)
+		{
+			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Python_drawn);
+			m_BarneyGun = BarneyGun::Python_drawn;
+		}
+		if (pev->weapons == BARNEY_DEAGLE)
+		{
+			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Deagle_drawn);
+			m_BarneyGun = BarneyGun::Deagle_drawn;
+		}
+		m_fGunDrawn = TRUE;
+	}
+	break;
 
 	case BARNEY_AE_HOLSTER:
+	{
+		// change bodygroup to replace gun in holster
+		if (pev->weapons == BARNEY_GLOCK)
 		{
-			// change bodygroup to replace gun in holster
-			if (pev->weapons == BARNEY_GLOCK)
-			{
-				SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Glock_holstered);
-				m_BarneyGun = BarneyGun::Glock_holstered;
-			}
-			if (pev->weapons == BARNEY_357)
-			{
-				SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Python_holstered);
-				m_BarneyGun = BarneyGun::Python_holstered;
-			}
-			if (pev->weapons == BARNEY_DEAGLE)
-			{
-				SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Deagle_holstered);
-				m_BarneyGun = BarneyGun::Deagle_holstered;
-			}
-			m_fGunDrawn = FALSE;
+			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Glock_holstered);
+			m_BarneyGun = BarneyGun::Glock_holstered;
 		}
-		break;
+		if (pev->weapons == BARNEY_357)
+		{
+			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Python_holstered);
+			m_BarneyGun = BarneyGun::Python_holstered;
+		}
+		if (pev->weapons == BARNEY_DEAGLE)
+		{
+			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Deagle_holstered);
+			m_BarneyGun = BarneyGun::Deagle_holstered;
+		}
+		m_fGunDrawn = FALSE;
+	}
+	break;
+
+	case BARNEY_AE_RELOAD:
+		{
+			EMIT_SOUND(ENT(pev), CHAN_WEAPON, "barney/ba_reload1.wav", 1, ATTN_NORM);
+			m_cAmmoLoaded = m_iClipSize;
+		}
+	break;
+
 
 	default:
 		CTalkMonster::HandleAnimEvent(pEvent);
@@ -740,6 +756,8 @@ void CBarney::Spawn()
 		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Glock_holstered);
 		m_BarneyGun = BarneyGun::Glock_holstered;
 		m_fGunDrawn = false;
+		m_iClipSize = 17;
+
 	}
 
 	if (pev->weapons == BARNEY_357)
@@ -747,6 +765,8 @@ void CBarney::Spawn()
 		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Python_holstered);
 		m_BarneyGun = BarneyGun::Python_holstered;
 		m_fGunDrawn = false;
+		m_iClipSize = 6;
+
 	}
 
 	if (pev->weapons == BARNEY_DEAGLE)
@@ -754,6 +774,8 @@ void CBarney::Spawn()
 		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Deagle_holstered);
 		m_BarneyGun = BarneyGun::Deagle_holstered;
 		m_fGunDrawn = false;
+		m_iClipSize = 8;
+
 	}
 
 	if (pev->weapons == BARNEY_NOGUN)
@@ -764,6 +786,8 @@ void CBarney::Spawn()
 	}
 
 	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP;
+	m_cAmmoLoaded = m_iClipSize;
+
 
 	MonsterInit();
 	SetUse(&CBarney::FollowerUse);
@@ -777,6 +801,7 @@ void CBarney::Precache()
 	PRECACHE_MODEL("models/barney.mdl");
 
 	PRECACHE_SOUND("barney/ba_attack2.wav");
+	PRECACHE_SOUND("barney/ba_reload1.wav");
 	PRECACHE_SOUND("weapons/pl_gun3.wav");
 	PRECACHE_SOUND("weapons/357_shot1.wav");
 	PRECACHE_SOUND("weapons/desert_eagle_fire.wav");
@@ -951,7 +976,6 @@ void CBarney::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir,
 				}
 			}
 		}
-		else flDamage *= 2;
 		// always a head shot
 		ptr->iHitgroup = HITGROUP_HEAD;
 		break;
@@ -1099,6 +1123,9 @@ Schedule_t* CBarney::GetSchedule()
 
 		if (HasConditions(bits_COND_HEAVY_DAMAGE))
 			return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
+
+		if (m_cAmmoLoaded <= 0)
+			return GetScheduleOfType(SCHED_RELOAD);
 	}
 	break;
 
@@ -1133,6 +1160,7 @@ Schedule_t* CBarney::GetSchedule()
 				return GetScheduleOfType(SCHED_TARGET_FACE);
 			}
 		}
+		
 
 		if (HasConditions(bits_COND_CLIENT_PUSH))
 		{
@@ -1409,7 +1437,7 @@ void CHevBarney::Precache()
 
 void CHevBarney::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType)
 {
-	if (ptr->iHitgroup != HITGROUP_HEAD)
+	if (ptr->iHitgroup != HITGROUP_HEAD && ptr->iHitgroup != HITGROUP_STOMACH)
 	{
 		if (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB))
 		{
@@ -1418,10 +1446,12 @@ void CHevBarney::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecD
 			if (flDamage <= 0)
 			{
 				UTIL_Ricochet(ptr->vecEndPos, 1.0);
-				flDamage = 0;
+				flDamage *= 0.01;
 			}
 
 		}
+		if (ptr->iHitgroup == HITGROUP_STOMACH)
+			flDamage *= 0.6;
 	}
 
 	CTalkMonster::TraceAttack(pevAttacker, flDamage, vecDir, ptr, bitsDamageType);

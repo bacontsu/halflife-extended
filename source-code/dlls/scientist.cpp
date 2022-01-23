@@ -200,7 +200,7 @@ IMPLEMENT_SAVERESTORE( CScientist, CTalkMonster );
 //=========================================================
 Task_t	tlFollow[] =
 {
-	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CANT_FOLLOW },	// If you fail, bail out of follow
+	//{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CANT_FOLLOW },	// If you fail, bail out of follow
 	{ TASK_MOVE_TO_TARGET_RANGE,(float)128		},	// Move within 128 of target ent (client)
 //	{ TASK_SET_SCHEDULE,		(float)SCHED_TARGET_FACE },
 };
@@ -749,8 +749,10 @@ void CScientist :: Spawn()
 	pev->solid			= SOLID_SLIDEBOX;
 	pev->movetype		= MOVETYPE_STEP;
 	m_bloodColor		= BLOOD_COLOR_RED;
+
 	if (FClassnameIs(pev, "monster_rosenberg"))
 		pev->health = gSkillData.scientistHealth * 2;
+
 	else	pev->health = gSkillData.scientistHealth;
 	pev->view_ofs		= Vector ( 0, 0, 50 );// position of the eyes relative to monster's origin.
 	m_flFieldOfView		= VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so scientists will notice player and say hello
@@ -893,9 +895,7 @@ void CScientist :: TalkInit()
 	}
 
 	// some voice diversity
-	if (FClassnameIs(pev, "monster_scientist_female"))
-		m_voicePitch = 112 + RANDOM_LONG(0, 13);
-	else m_voicePitch = 93 + RANDOM_LONG(0, 13);
+	m_voicePitch = 93 + RANDOM_LONG(0, 10);
 	
 }
 
@@ -975,7 +975,7 @@ void CScientist::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecD
 {
 	if (FClassnameIs(pev, "monster_scientist_hev"))
 	{
-		if (ptr->iHitgroup != 1)
+		if (ptr->iHitgroup != HITGROUP_HEAD && ptr->iHitgroup != HITGROUP_STOMACH)
 		{
 			if (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB))
 			{
@@ -984,11 +984,13 @@ void CScientist::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecD
 				if (flDamage <= 0)
 				{
 					UTIL_Ricochet(ptr->vecEndPos, 1.0);
-					flDamage = 0;
+					flDamage *= 0.01;
 				}
 
 			}
 		}
+		if (ptr->iHitgroup == HITGROUP_STOMACH)
+			flDamage *= 0.6;
 	}
 	CTalkMonster::TraceAttack(pevAttacker, flDamage, vecDir, ptr, bitsDamageType);
 }

@@ -58,7 +58,6 @@ int gmsgWaterSplash = 0;
 
 int gmsgDropMag = 0;
 
-
 int gmsgStatusText = 0;
 int gmsgStatusValue = 0;
 
@@ -78,9 +77,13 @@ int gmsgStatsPlayer = 0;
 int gmsgTeamFull = 0;
 int gmsgOldWeapon = 0;
 int gmsgCustomIcon = 0;
-int gmsgFog = 0;
+int gmsgFog = 0;	//fog
 int gmsgSetSkin = 0;
 int gmsgViewmodelSkin = 0; // Weapon Model Skinfamilies
+int gmsgSetSky = 0;		//LRC
+int gmsgZoom = 0;
+int gmsgImpact = 0;
+
 
 
 void LinkUserMessages()
@@ -126,14 +129,21 @@ void LinkUserMessages()
 	gmsgAmmoX = REG_USER_MSG("AmmoX", 2);
 	gmsgTeamNames = REG_USER_MSG("TeamNames", -1);
 	gmsgWaterSplash = REG_USER_MSG("WaterSplash", -1);
-	gmsgDropMag = REG_USER_MSG("DropMag", -1);
 	gmsgSetSkin = REG_USER_MSG("SetSkin", 1);
 	gmsgViewmodelSkin = REG_USER_MSG("WpnSkn", -1); //add by bacontsu
+	gmsgDropMag = REG_USER_MSG("DropMag", -1);
 
 	gmsgStatusText = REG_USER_MSG("StatusText", -1);
 	gmsgStatusValue = REG_USER_MSG("StatusValue", 3);
 
 	gmsgFog = REG_USER_MSG("Fog", 9);
+
+	gmsgSetSky = REG_USER_MSG("SetSky", 7);			//LRC
+
+	gmsgZoom = REG_USER_MSG("ZoomHud", 1);
+
+
+	gmsgImpact = REG_USER_MSG("Impact", -1);
 
 	gmsgSpectator = g_engfuncs.pfnRegUserMsg("Spectator", 2);
 	gmsgStatusIcon = g_engfuncs.pfnRegUserMsg("StatusIcon", -1);

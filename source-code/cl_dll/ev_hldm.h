@@ -12,6 +12,8 @@ void EV_HLDM_GunshotDecalTrace( pmtrace_t *pTrace, char *decalName );
 void EV_HLDM_DecalGunshot( pmtrace_t *pTrace, int iBulletType );
 int EV_HLDM_CheckTracer( int idx, float *vecSrc, float *end, float *forward, float *right, int iBulletType, int iTracerFreq, int *tracerCount );
 void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecDirShooting, float flDistance, int iBulletType, int iTracerFreq, int *tracerCount, float flSpreadX, float flSpreadY );
+void EV_HLDM_MuzzleFlash(Vector pos, float amount, int iR, int iG, int iB);
+void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, float PosNorm_Y, float PosNorm_Z, int DoPuff, int Material);
 
 extern "C"
 {
@@ -47,6 +49,7 @@ extern "C"
 	void EV_ar1(event_args_t* args);
 	//void EV_ar2(event_args_t* args);
 	void EV_GLFire(event_args_t* args);
+
 
 
 	void EV_TrainPitchAdjust(event_args_t* args);

@@ -369,6 +369,7 @@ public:
 	int			iWeight() { return ItemInfoArray[m_iId].iWeight; }
 	int			iFlags() { return ItemInfoArray[m_iId].iFlags; }
 
+
 	// int		m_iIdPrimary;										// Unique Id for primary ammo
 	// int		m_iIdSecondary;										// Unique Id for secondary ammo
 };
@@ -784,6 +785,9 @@ public:
 	void WeaponIdle() override;
 	float m_flNextAnimTime;
 	int m_iShell;
+
+	BOOL m_fInZoom;// don't save this.
+
 
 	float nextAnimUpdate = 0.0f;
 

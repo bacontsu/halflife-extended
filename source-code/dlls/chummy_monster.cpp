@@ -51,7 +51,7 @@ public:
 	int	ObjectCaps() override { return CBaseMonster::ObjectCaps() | FCAP_IMPULSE_USE; }
 
 	void GibMonster() override;
-	void	Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
+	void	EXPORT	Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
 
 	void PrescheduleThink();
 
@@ -211,7 +211,7 @@ void CChubMonster::MonsterThink()
 	case	CHUB_EAT:
 	{
 		// if not moving, sample environment to see if anything scary is around. Do a radius search 'look' at random.
-		if (RANDOM_LONG(0, 70) == 1)
+		if (RANDOM_LONG(0, 20) == 1)
 		{
 			Look(256);
 			if (HasConditions(bits_COND_SEE_FEAR))
@@ -222,7 +222,7 @@ void CChubMonster::MonsterThink()
 				PickNewDest(CHUB_SCARED_BY_ENT);
 				SetActivity(ACT_WALK);
 			}
-			else if (RANDOM_LONG(0, 70) == 1)
+			else if (RANDOM_LONG(0, 20) == 1)
 			{
 				// if chummy doesn't see anything, there's still a chance that it will move. (boredom)
 				//ALERT ( at_aiconsole, "Bored\n" );
@@ -255,7 +255,6 @@ void CChubMonster::MonsterThink()
 				{
 					PickNewDest(CHUB_SMELL_FOOD);
 					SetActivity(ACT_WALK);
-					pev->speed *= 0.75;
 				}
 			}
 		}
@@ -401,8 +400,7 @@ void CChubMonster::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE u
 //=========================================================
 void CChubMonster::PrescheduleThink()
 {
-	
-	// at random, initiate a blink if not already blinking or sleeping
+	// at random, initiate a blink if not already blinking
 	if ((pev->skin == 0) && RANDOM_LONG(0, 50) == 0)
 	{// start blinking!
 		pev->skin = 2;

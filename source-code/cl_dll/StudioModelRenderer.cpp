@@ -455,6 +455,11 @@ void CStudioModelRenderer::StudioSetUpTransform(int trivial_accept)
 		float			f = 0;
 		float			d;
 
+		// access to studio flags
+		mstudioseqdesc_t* pseqdesc;
+		pseqdesc = (mstudioseqdesc_t*)((byte*)m_pStudioHeader + m_pStudioHeader->seqindex) + m_pCurrentEntity->curstate.sequence;
+
+
 		// don't do it if the goalstarttime hasn't updated in a while.
 
 		// NOTE:  Because we need to interpolate multiplayer characters, the interpolation time limit
@@ -477,9 +482,12 @@ void CStudioModelRenderer::StudioSetUpTransform(int trivial_accept)
 			f = 0;
 		}
 
-		for (i = 0; i < 3; i++)
+		if (pseqdesc->motiontype & STUDIO_LX || m_pCurrentEntity->curstate.eflags & EFLAG_SLERP)
 		{
-			modelpos[i] += (m_pCurrentEntity->origin[i] - m_pCurrentEntity->latched.prevorigin[i]) * f;
+			for (i = 0; i < 3; i++)
+			{
+				modelpos[i] += (m_pCurrentEntity->origin[i] - m_pCurrentEntity->latched.prevorigin[i]) * f;
+			}
 		}
 
 		// NOTE:  Because multiplayer lag can be relatively large, we don't want to cap
@@ -1378,13 +1386,18 @@ int CStudioModelRenderer::StudioDrawModel(int flags)
 		}
 
 		// light model.
-		if (m_pCurrentEntity == gEngfuncs.GetViewModel())
+		const char* lightNameReal = gEngfuncs.pfnGetGameDirectory();
+		char lightName[MAX_MODEL_NAME];
+		strcpy(lightName, lightNameReal);
+		strcat(lightName, "/models/v_hands_light.mdl");
+
+		if (m_pCurrentEntity == gEngfuncs.GetViewModel() && std::filesystem::exists(lightName))
 		{
 			cl_entity_t saveent = *m_pCurrentEntity;
 
-			model_t* handmodel = IEngineStudio.Mod_ForName("models/v_hands_light.mdl", 1); //load model 
+			model_t* handmodel = IEngineStudio.Mod_ForName("models/v_hands_light.mdl", 0); //load model 
 
-			if (CVAR_GET_FLOAT("cl_hands") != 0)
+			if (CVAR_GET_FLOAT("cl_hands") != 0 && handmodel)
 			{
 				m_pCurrentEntity->curstate.body = CVAR_GET_FLOAT("cl_hands") - 1;
 
@@ -2012,7 +2025,7 @@ int CStudioModelRenderer::StudioDrawPlayer(int flags, entity_state_t* pplayer)
 		StudioRenderModel();
 		m_pPlayerInfo = NULL;
 
-		if (pplayer->weaponmodel)
+		if (pplayer->weaponmodel && gHUD.isThirdPerson)
 		{
 			cl_entity_t saveent = *m_pCurrentEntity;
 

@@ -289,7 +289,7 @@ void CHAssassin::ShootCrossbow()
 
 	CCrossbowBolt* pBolt = CCrossbowBolt::BoltCreate();
 	pBolt->pev->origin = vecShootOrigin;
-	pBolt->pev->angles = gpGlobals->v_forward;
+	pBolt->pev->angles = pev->angles;
 	pBolt->pev->owner = edict();
 
 	if (pev->waterlevel == 3)
@@ -1163,6 +1163,15 @@ void CHAssassin::SetActivity(Activity NewActivity)
 		}
 		
 		break;
+	case ACT_RANGE_ATTACK2:
+		iSequence = LookupSequence("grenadethrow");
+		break;
+	case ACT_MELEE_ATTACK1:
+		iSequence = LookupSequence("kick");
+		break;
+	case ACT_MELEE_ATTACK2:
+		iSequence = LookupSequence("kickshort");
+		break;	
 	case ACT_RELOAD:
 		if (pev->weapons == HASS_CROSSBOW)
 		{
@@ -1189,13 +1198,19 @@ void CHAssassin::SetActivity(Activity NewActivity)
 		break;
 
 	case ACT_IDLE:
+		if (RANDOM_LONG(0, 9) == 0)
+			m_fStanding = RANDOM_LONG(0, 1);
 		if (pev->weapons == HASS_CROSSBOW)
 		{
-			// get crossbow reload
-			iSequence = LookupSequence("idle2_cb");
+			if (m_fStanding)
+				iSequence = LookupSequence("idle1");
+			else iSequence = LookupSequence("idle2_cb");
 		}
+		else 
+			if (m_fStanding)
+				iSequence = LookupSequence("idle3");
+			else iSequence = LookupSequence("idle2");
 		break;
-
 	default:
 		iSequence = LookupActivity(NewActivity);
 		break;

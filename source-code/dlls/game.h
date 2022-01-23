@@ -45,6 +45,8 @@ extern cvar_t coopplay;
 extern cvar_t coopweprespawn;
 extern cvar_t spamdelay;
 
+extern cvar_t weaponswapping;
+
 // Engine Cvars
 extern cvar_t	*g_psv_gravity;
 extern cvar_t	*g_psv_aim;

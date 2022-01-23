@@ -107,6 +107,8 @@ cvar_t	*cl_chasedist;
 cvar_t* cl_weaponlag;
 cvar_t* cl_headbob_enable;
 
+
+
 // These cvars are not registered (so users can't cheat), so set the ->value field directly
 // Register these cvars in V_Init() if needed for easy tweaking
 cvar_t	v_iyaw_cycle		= {"v_iyaw_cycle", "2", 0, 2};
@@ -710,8 +712,11 @@ V_CalcRefdef
 
 ==================
 */
+
 void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 {
+	gHUD.isThirdPerson = CL_IsThirdPerson();
+
 	cl_entity_t* ent, * view;
 	int i;
 	Vector angles;
@@ -726,6 +731,23 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 
 	Vector camAngles, camForward, camRight, camUp;
 	cl_entity_t *pwater;
+	
+	static struct model_s* savedviewmodel;
+
+	//LRC - if this is the second pass through, then we've just drawn the sky, and now we're setting up the normal view.
+	if (pparams->nextView == 1)
+	{
+		view = gEngfuncs.GetViewModel();
+		view->model = savedviewmodel;
+		pparams->viewangles[0] = v_angles.x;
+		pparams->viewangles[1] = v_angles.y;
+		pparams->viewangles[2] = v_angles.z;
+		pparams->vieworg[0] = v_origin.x;
+		pparams->vieworg[1] = v_origin.y;
+		pparams->vieworg[2] = v_origin.z;
+		pparams->nextView = 0;
+		return;
+	}
 
 	V_DriftPitch ( pparams );
 
@@ -742,6 +764,12 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	// view is the weapon model (only visible from inside body )
 	view = gEngfuncs.GetViewModel();
 
+	//LRC - don't show weapon models when we're drawing the sky.
+	if (gHUD.m_iSkyMode == SKY_ON)
+	{
+		savedviewmodel = view->model;
+		view->model = NULL;
+	}
 
 	// refresh position
 	VectorCopy ( pparams->simorg, pparams->vieworg );
@@ -1128,6 +1156,16 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	lasttime = pparams->time;
 
 	v_origin = pparams->vieworg;
+
+	// LRC - override the view position if we're drawing a sky, rather than the player's view
+	if (gHUD.m_iSkyMode == SKY_ON && pparams->nextView == 0)
+	{
+		pparams->vieworg[0] = gHUD.m_vecSkyPos.x;
+		pparams->vieworg[1] = gHUD.m_vecSkyPos.y;
+		pparams->vieworg[2] = gHUD.m_vecSkyPos.z;
+
+		pparams->nextView = 1;
+	}
 }
 
 void V_SmoothInterpolateAngles( float * startAngle, float * endAngle, float * finalAngle, float degreesPerSec )
@@ -1932,6 +1970,8 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams )
 {
 //	RecClCalcRefdef(pparams);
+
+
 
 	// intermission / finale rendering
 	if ( pparams->intermission )

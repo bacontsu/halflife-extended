@@ -1213,7 +1213,21 @@ void CPitdrone::CheckAmmo()
 	}
 }
 
-const GibData PitDroneGibs = { "models/gibs/gibs_pitdrone.mdl", 0, 9 };
+const GibLimit PitDroneGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 2 },
+	{ 2 },
+	{ 2 },
+	{ 2 },
+	{ 1 },
+};
+
+const GibData PitDroneGibs = { "models/gibs/gibs_pitdrone.mdl", 0, 10, PitDroneGibLimits };
 
 void CPitdrone::GibMonster()
 {

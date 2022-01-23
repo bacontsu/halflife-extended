@@ -94,6 +94,8 @@ public:
 	BOOL	CheckRangeAttack1(float flDot, float flDist);
 	BOOL	CheckRangeAttack2(float flDot, float flDist);
 
+	void GibMonster();
+
 	Activity GetStoppedActivity(void);
 
 	void	MonsterThink(void);
@@ -252,6 +254,24 @@ void CFlybee::DeathSound(void)
 void CFlybee::PainSound(void)
 {
 	EMIT_ICKY_SOUND(CHAN_VOICE, pPainSounds);
+}
+
+const GibLimit BeeGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+	{ 1 },
+	{ 1 },
+};
+
+const GibData BeeGibs = { "models/gibs/bullsquid_gibs.mdl", 0, 4, BeeGibLimits };
+void CFlybee::GibMonster()
+{
+	CGib::SpawnRandomGibs(pev, 4, BeeGibs);	// Throw alien gibs
+	CGib::SpawnRandomGibs(pev, 2, 0);
+
+	SetThink(&CBaseMonster::SUB_Remove);
+	pev->nextthink = gpGlobals->time;
 }
 
 

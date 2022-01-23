@@ -111,7 +111,12 @@ const char *CZombieBarney::pPainSounds[] =
 	"zombie/zo_pain2.wav",
 };
 
-const GibData ZombGibs = { "models/gibs/gibs_zombie.mdl", 0, 2 };
+const GibLimit ZombGibLimits[] =
+{
+	{ 1 },
+	{ 1 },
+};
+const GibData ZombGibs = { "models/gibs/gibs_zombie.mdl", 0, 2, ZombGibLimits };
 void CZombieBarney::GibMonster()
 {
 	CGib::SpawnRandomGibs(pev, 2, ZombGibs);
