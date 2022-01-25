@@ -1256,11 +1256,6 @@ void COFMedicAlly :: Precache()
 	PRECACHE_SOUND( "fgrunt/torch_cut_loop.wav" );
 	PRECACHE_SOUND( "fgrunt/medic.wav" );
 
-	PRECACHE_SOUND("common/boots_heavy1.wav");
-	PRECACHE_SOUND("common/boots_heavy3.wav");
-	PRECACHE_SOUND("common/boots_heavy2.wav");
-	PRECACHE_SOUND("common/boots_heavy4.wav");
-
 	// get voice pitch
 	m_voicePitch = 105;
 

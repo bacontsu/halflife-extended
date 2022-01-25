@@ -36,6 +36,8 @@
 #include "decals.h"
 #include "soundent.h"
 #include "gamerules.h"
+#include "player.h"
+
 
 #define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
 #define SF_IGNORE_CHUMTOADS 16384
@@ -2680,6 +2682,106 @@ void CBaseMonster :: SetEyePosition ()
 	}
 }
 
+float NPC_Step(CBaseMonster* pMonster)
+{
+	char chTextureType;
+	float fvol;
+	float fvolbar;
+	char szbuffer[64];
+	char* rgsz[4];
+	const char* pTextureName;
+	TraceResult ptr;
+	float fattn = ATTN_NORM;
+	int cnt;
+
+	UTIL_TraceLine(pMonster->pev->origin + Vector(0, 0, 8), pMonster->pev->origin - Vector(0, 0, 16), dont_ignore_monsters, ENT(pMonster->pev), &ptr);
+	CBaseEntity* pEntity = CBaseEntity::Instance(ptr.pHit);
+
+	chTextureType = 0;
+	if (pEntity)
+		pTextureName = TRACE_TEXTURE(ENT(pEntity->pev), pMonster->pev->origin + Vector(0, 0, 8), pMonster->pev->origin - Vector(0, 0, 16));
+	else
+		pTextureName = TRACE_TEXTURE(ENT(0), pMonster->pev->origin + Vector(0, 0, 8), pMonster->pev->origin - Vector(0, 0, 16));
+
+	if (pTextureName)
+	{
+		// strip leading '-0' or '+0~' or '{' or '!'
+		if (*pTextureName == '-' || *pTextureName == '+')
+			pTextureName += 2;
+
+		if (*pTextureName == '{' || *pTextureName == '!' || *pTextureName == '~' || *pTextureName == ' ')
+			pTextureName++;
+		// '}}'
+		strcpy(szbuffer, pTextureName);
+		szbuffer[CBTEXTURENAMEMAX - 1] = 0;
+
+		// get texture type
+		chTextureType = TEXTURETYPE_Find((char*)pTextureName);
+	}
+
+	switch (pMonster->m_Activity)
+	{
+	case ACT_WALK:
+		fvol = 0.7;
+		break;
+	case ACT_RUN:
+		fvol = 1.0;
+		break;
+	default:
+		fvol = 0.5;
+		break;
+	}
+
+	switch (chTextureType)
+	{
+	default:
+	case CHAR_TEX_CONCRETE: fvolbar = 0.6;
+		rgsz[0] = "player/pl_step1.wav";
+		rgsz[1] = "player/pl_step2.wav";
+		cnt = 2;
+		break;
+	case CHAR_TEX_METAL: fvolbar = 0.3;
+		rgsz[0] = "player/pl_metal1.wav";
+		rgsz[1] = "player/pl_metal2.wav";
+		cnt = 2;
+		break;
+	case CHAR_TEX_DIRT: fvolbar = 0.1;
+		rgsz[0] = "player/pl_dirt1.wav";
+		rgsz[1] = "player/pl_dirt2.wav";
+		rgsz[2] = "player/pl_dirt3.wav";
+		cnt = 3;
+		break;
+	case CHAR_TEX_VENT: fvolbar = 0.3;
+		rgsz[0] = "player/pl_duct1.wav";
+		rgsz[1] = "player/pl_duct2.wav";
+		cnt = 2;
+		break;
+	case CHAR_TEX_GRATE: fvolbar = 0.5;
+		rgsz[0] = "player/pl_grate1.wav";
+		rgsz[1] = "player/pl_grate4.wav";
+		cnt = 2;
+		break;
+	case CHAR_TEX_TILE: fvolbar = 0.2;
+		rgsz[0] = "player/pl_tile1.wav";
+		rgsz[1] = "player/pl_tile3.wav";
+		rgsz[2] = "player/pl_tile2.wav";
+		rgsz[3] = "player/pl_tile4.wav";
+		cnt = 4;
+		break;
+	case CHAR_TEX_SLOSH: fvolbar = 0.0;
+		rgsz[0] = "player/pl_slosh1.wav";
+		rgsz[1] = "player/pl_slosh3.wav";
+		rgsz[2] = "player/pl_slosh2.wav";
+		rgsz[3] = "player/pl_slosh4.wav";
+		cnt = 4;
+		break;
+	}
+
+	UTIL_EmitAmbientSound(ENT(0), pMonster->pev->origin, rgsz[RANDOM_LONG(0, cnt - 1)], fvol, fattn, 0, 96 + RANDOM_LONG(0, 0xf));
+
+	return fvolbar;
+}
+
 void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 	switch( pEvent->event )
@@ -2708,8 +2810,10 @@ void CBaseMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}
 		break;
 
-	case SCRIPT_EVENT_SOUND:			// Play a named wave file
-		EMIT_SOUND( edict(), CHAN_BODY, pEvent->options, 1.0, ATTN_IDLE );
+	case SCRIPT_EVENT_SOUND: // Play a named wave file
+		if (FStrEq(pEvent->options, "dynstep"))
+			NPC_Step(this);
+		else EMIT_SOUND(edict(), CHAN_BODY, pEvent->options, 1.0, ATTN_IDLE);
 		break;
 
 	case SCRIPT_EVENT_SOUND_VOICE:
@@ -3595,3 +3699,5 @@ void CBaseMonster::ClearShockEffect()
 		m_fShockEffect = false;
 	}
 }
+
+

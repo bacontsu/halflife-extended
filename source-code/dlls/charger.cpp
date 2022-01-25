@@ -24,17 +24,6 @@
 #include	"nodes.h"
 #include	"soundent.h"
 
-//--------------------------------------
-//this is from hl-invasion extdll.h
-//but we'll define it right here since this is the only piece of code that needs all that
-#ifndef max
-#define max(a,b)    (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a,b)    (((a) < (b)) ? (a) : (b))
-#endif
-//--------------------------------------
 
 
 #define FLYBEE_SPEED		150
@@ -264,7 +253,7 @@ const GibLimit BeeGibLimits[] =
 	{ 1 },
 };
 
-const GibData BeeGibs = { "models/gibs/bullsquid_gibs.mdl", 0, 4, BeeGibLimits };
+const GibData BeeGibs = { "models/gibs/flybee_gibs.mdl", 0, 4, BeeGibLimits };
 void CFlybee::GibMonster()
 {
 	CGib::SpawnRandomGibs(pev, 4, BeeGibs);	// Throw alien gibs
@@ -319,6 +308,7 @@ void CFlybee::Spawn()
 void CFlybee::Precache()
 {
 	PRECACHE_MODEL("models/flybee.mdl");
+	PRECACHE_MODEL("models/gibs/flybee_gibs.mdl");
 
 	PRECACHE_SOUND("zombie/claw_miss2.wav");
 	PRECACHE_SOUND("debris/beamstart4.wav");
@@ -708,7 +698,7 @@ Schedule_t* CFlybee::GetSchedule()
 		{
 			//			ALERT ( at_console, "MELEE1\n" );
 
-			m_iFear = max(HATE_LEVEL, m_iFear - 5);
+			m_iFear = V_max(HATE_LEVEL, m_iFear - 5);
 			return GetScheduleOfType(SCHED_MELEE_ATTACK1);
 		}
 
@@ -716,7 +706,7 @@ Schedule_t* CFlybee::GetSchedule()
 		{
 			//			ALERT ( at_console, "ATTACK1\n" );
 
-			m_iFear = min(FEAR_LEVEL, m_iFear + 5);
+			m_iFear = V_min(FEAR_LEVEL, m_iFear + 5);
 			return GetScheduleOfType(SCHED_RANGE_ATTACK1);
 		}
 
@@ -731,9 +721,9 @@ Schedule_t* CFlybee::GetSchedule()
 
 		if (HasConditions(bits_COND_HEAVY_DAMAGE))
 		{
-			m_iFear = min(FEAR_LEVEL, m_iFear + 3);
+			m_iFear = V_min(FEAR_LEVEL, m_iFear + 3);
 
-			m_flightSpeed = min(m_flMaxSpeed, m_flightSpeed + 40);
+			m_flightSpeed = V_min(m_flMaxSpeed, m_flightSpeed + 40);
 		}
 
 		return GetScheduleOfType(SCHED_STANDOFF);
@@ -1014,7 +1004,7 @@ void CFlybee::RunTask(Task_t* pTask)
 
 		m_SaveVelocity = (tr.vecEndPos - pev->origin).Normalize() * m_flightSpeed;
 
-		m_flightSpeed = min(m_flMaxSpeed, m_flightSpeed *= 1.2);
+		m_flightSpeed = V_min(m_flMaxSpeed, m_flightSpeed *= 1.2);
 
 
 		break;

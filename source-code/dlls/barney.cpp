@@ -600,49 +600,40 @@ void CBarney::HandleAnimEvent(MonsterEvent_t* pEvent)
 	{
 	case BARNEY_AE_SHOOT:
 	{
-		if (pev->weapons == BARNEY_GLOCK)
+
+		switch (pev->weapons)
 		{
+		case BARNEY_GLOCK:
 			BarneyFirePistol();
 			break;
-		}
-
-
-		if (pev->weapons == BARNEY_357)
-		{
+		case BARNEY_357:
 			BarneyFire357();
 			break;
-		}
-
-		if (pev->weapons == BARNEY_DEAGLE)
-		{
+		case BARNEY_DEAGLE:
 			BarneyFireDeagle();
 			break;
 		}
 
-		if (pev->weapons == BARNEY_NOGUN)
-		{
-			break;
-		}
 	}
 	break;
 
 	case BARNEY_AE_DRAW:
 	{
 		// barney's bodygroup switches here so he can pull gun from holster
-		if (pev->weapons == BARNEY_GLOCK)
+		switch (pev->weapons)
 		{
+		case BARNEY_GLOCK:
 			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Glock_drawn);
 			m_BarneyGun = BarneyGun::Glock_drawn;
-		}
-		if (pev->weapons == BARNEY_357)
-		{
+			break;
+		case BARNEY_357:
 			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Python_drawn);
 			m_BarneyGun = BarneyGun::Python_drawn;
-		}
-		if (pev->weapons == BARNEY_DEAGLE)
-		{
+			break;
+		case BARNEY_DEAGLE:
 			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Deagle_drawn);
 			m_BarneyGun = BarneyGun::Deagle_drawn;
+			break;
 		}
 		m_fGunDrawn = TRUE;
 	}
@@ -651,20 +642,21 @@ void CBarney::HandleAnimEvent(MonsterEvent_t* pEvent)
 	case BARNEY_AE_HOLSTER:
 	{
 		// change bodygroup to replace gun in holster
-		if (pev->weapons == BARNEY_GLOCK)
+		switch (pev->weapons)
 		{
+		case BARNEY_GLOCK:
+
 			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Glock_holstered);
 			m_BarneyGun = BarneyGun::Glock_holstered;
-		}
-		if (pev->weapons == BARNEY_357)
-		{
+			break;
+		case BARNEY_357:
 			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Python_holstered);
 			m_BarneyGun = BarneyGun::Python_holstered;
-		}
-		if (pev->weapons == BARNEY_DEAGLE)
-		{
+			break;
+		case BARNEY_DEAGLE:
 			SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Deagle_holstered);
 			m_BarneyGun = BarneyGun::Deagle_holstered;
+			break;
 		}
 		m_fGunDrawn = FALSE;
 	}
@@ -713,76 +705,53 @@ void CBarney::Spawn()
 
 	// choose random body and skin
 	if (m_BarneyHead == BarneyHead::Random)
-	{
 		m_BarneyHead = RANDOM_LONG(0, 7);
-	}
+
 	if (m_BarneyHelm == BarneyHelm::Random)
-	{
 		m_BarneyHelm = RANDOM_LONG(0, 3);
-	}
+
 	if (m_BarneyVest == BarneyVest::Random)
-	{
 		m_BarneyVest = RANDOM_LONG(0, 2);
-	}
+
 	if (m_BarneyGlasses == BarneyGlasses::Random)
-	{
 		m_BarneyGlasses = RANDOM_LONG(0, 2);
-	}
+	
 
 	if (pev->skin == -1)
-	{
 		pev->skin = RANDOM_LONG(0, NUM_BARNEY_SKINS - 1);// pick a skin, any skin
-	}
-
-	if (m_BarneyHead == BarneyHead::Clint || m_BarneyHead == BarneyHead::Leonel || m_BarneyHead == BarneyHead::Tommy)
-	{
-		m_voicePitch = 96;
-	}
-
-	if (m_BarneyHead == BarneyHead::Marley)//Marley is young, his voice is higher
-	{
-		m_voicePitch = 103;
-	}
-
+	
 	SetBodygroup(BarneyBodyGroup::Head, m_BarneyHead);
 	SetBodygroup(BarneyBodyGroup::Helmet, m_BarneyHelm);
 	SetBodygroup(BarneyBodyGroup::Vest, m_BarneyVest);
 	SetBodygroup(BarneyBodyGroup::Glasses, m_BarneyGlasses);
 
 	// initialise weapons
-	if (pev->weapons == 0 || pev->weapons == -1 || pev->weapons == 1)
+	switch (pev->weapons)
 	{
+	case BARNEY_357:
+		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Python_holstered);
+		m_BarneyGun = BarneyGun::Python_holstered;
+		m_fGunDrawn = false;
+		m_iClipSize = 6;
+		break;
+	case BARNEY_DEAGLE:
+		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Deagle_holstered);
+		m_BarneyGun = BarneyGun::Deagle_holstered;
+		m_fGunDrawn = false;
+		m_iClipSize = 8;
+		break;
+	case BARNEY_NOGUN:
+		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::None);
+		m_BarneyGun = BarneyGun::None;
+		m_fGunDrawn = false;
+		break;
+	default:
 		pev->weapons = BARNEY_GLOCK;
 		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Glock_holstered);
 		m_BarneyGun = BarneyGun::Glock_holstered;
 		m_fGunDrawn = false;
 		m_iClipSize = 17;
-
-	}
-
-	if (pev->weapons == BARNEY_357)
-	{
-		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Python_holstered);
-		m_BarneyGun = BarneyGun::Python_holstered;
-		m_fGunDrawn = false;
-		m_iClipSize = 6;
-
-	}
-
-	if (pev->weapons == BARNEY_DEAGLE)
-	{
-		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::Deagle_holstered);
-		m_BarneyGun = BarneyGun::Deagle_holstered;
-		m_fGunDrawn = false;
-		m_iClipSize = 8;
-
-	}
-
-	if (pev->weapons == BARNEY_NOGUN)
-	{
-		SetBodygroup(BarneyBodyGroup::Gun, BarneyGun::None);
-		m_BarneyGun = BarneyGun::None;
-		m_fGunDrawn = false;
+		break;
 	}
 
 	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP;
@@ -800,11 +769,9 @@ void CBarney::Precache()
 {
 	PRECACHE_MODEL("models/barney.mdl");
 
-	PRECACHE_SOUND("barney/ba_attack2.wav");
+	
+
 	PRECACHE_SOUND("barney/ba_reload1.wav");
-	PRECACHE_SOUND("weapons/pl_gun3.wav");
-	PRECACHE_SOUND("weapons/357_shot1.wav");
-	PRECACHE_SOUND("weapons/desert_eagle_fire.wav");
 
 	PRECACHE_SOUND("barney/ba_pain1.wav");
 	PRECACHE_SOUND("barney/ba_pain2.wav");
@@ -1414,10 +1381,21 @@ void CHevBarney::Precache()
 {
 	PRECACHE_MODEL("models/barney_hev.mdl");
 
-	PRECACHE_SOUND("barney/ba_attack1.wav");
-	PRECACHE_SOUND("weapons/pl_gun3.wav");
-	PRECACHE_SOUND("weapons/357_shot1.wav");
-	PRECACHE_SOUND("weapons/desert_eagle_fire.wav");
+	switch (pev->weapons)
+	{
+	case BARNEY_357:
+		PRECACHE_SOUND("weapons/357_shot1.wav");
+		break;
+	case BARNEY_DEAGLE:
+		PRECACHE_SOUND("weapons/desert_eagle_fire.wav");
+		break;
+	case BARNEY_NOGUN:
+		// empty like my heart~
+		break;
+	default:
+		PRECACHE_SOUND("weapons/pl_gun3.wav");
+		break;
+	}
 	PRECACHE_SOUND("fvox/flatline.wav");
 
 
@@ -1623,42 +1601,37 @@ void CHevBarney::HandleAnimEvent(MonsterEvent_t* pEvent)
 	switch (pEvent->event)
 	{
 	case BARNEY_AE_SHOOT:
-		if (pev->weapons == 1)
-		{
-			BarneyFirePistol();
-			break;
-		}
 
-
-		if (pev->weapons == 3)
+		switch (pev->weapons)
 		{
+		case BARNEY_357:
 			BarneyFire357();
 			break;
-		}
-
-		if (pev->weapons == 5)
-		{
+		case BARNEY_DEAGLE:
 			BarneyFireDeagle();
+			break;
+		case BARNEY_GLOCK:
+			BarneyFirePistol();
 			break;
 		}
 
 	case BARNEY_AE_DRAW:
 	{
-		// HEVBarney's bodygroup switches here so he can pull gun from holster
-		if (pev->weapons == BARNEY_GLOCK)
+		// barney's bodygroup switches here so he can pull gun from holster
+		switch (pev->weapons)
 		{
+		case BARNEY_GLOCK:
 			SetBodygroup(HEVBarneyBodyGroup::Gun, HEVBarneyGun::Glock_drawn);
 			m_HEVBarneyGun = HEVBarneyGun::Glock_drawn;
-		}
-		if (pev->weapons == BARNEY_357)
-		{
+			break;
+		case BARNEY_357:
 			SetBodygroup(HEVBarneyBodyGroup::Gun, HEVBarneyGun::Python_drawn);
 			m_HEVBarneyGun = HEVBarneyGun::Python_drawn;
-		}
-		if (pev->weapons == BARNEY_DEAGLE)
-		{
+			break;
+		case BARNEY_DEAGLE:
 			SetBodygroup(HEVBarneyBodyGroup::Gun, HEVBarneyGun::Deagle_drawn);
 			m_HEVBarneyGun = HEVBarneyGun::Deagle_drawn;
+			break;
 		}
 		m_fGunDrawn = TRUE;
 	}
@@ -1667,21 +1640,23 @@ void CHevBarney::HandleAnimEvent(MonsterEvent_t* pEvent)
 	case BARNEY_AE_HOLSTER:
 	{
 		// change bodygroup to replace gun in holster
-		if (pev->weapons == BARNEY_GLOCK)
+		switch (pev->weapons)
 		{
+		case BARNEY_GLOCK:
+
 			SetBodygroup(HEVBarneyBodyGroup::Gun, HEVBarneyGun::Glock_holstered);
 			m_HEVBarneyGun = HEVBarneyGun::Glock_holstered;
-		}
-		if (pev->weapons == BARNEY_357)
-		{
+			break;
+		case BARNEY_357:
 			SetBodygroup(HEVBarneyBodyGroup::Gun, HEVBarneyGun::Python_holstered);
 			m_HEVBarneyGun = HEVBarneyGun::Python_holstered;
-		}
-		if (pev->weapons == BARNEY_DEAGLE)
-		{
+			break;
+		case BARNEY_DEAGLE:
 			SetBodygroup(HEVBarneyBodyGroup::Gun, HEVBarneyGun::Deagle_holstered);
 			m_HEVBarneyGun = HEVBarneyGun::Deagle_holstered;
+			break;
 		}
+		m_fGunDrawn = FALSE;
 	}
 	break;
 

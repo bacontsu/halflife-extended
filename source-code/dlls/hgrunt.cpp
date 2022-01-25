@@ -1501,11 +1501,6 @@ void CHGrunt :: Precache()
 	PRECACHE_SOUND( "weapons/sbarrel1.wav" );
 	PRECACHE_SOUND( "weapons/556ar_shoot.wav" );
 
-	PRECACHE_SOUND("common/boots_heavy1.wav");
-	PRECACHE_SOUND("common/boots_heavy3.wav");
-	PRECACHE_SOUND("common/boots_heavy2.wav");
-	PRECACHE_SOUND("common/boots_heavy4.wav");
-
 	UTIL_PrecacheOther("rpg_rocket");
 
 	PRECACHE_SOUND("zombie/claw_miss2.wav");// because we use the basemonster SWIPE animation event
