@@ -589,7 +589,7 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 			
 		{
 			
-				switch (gEngfuncs.pfnRandomLong(0, 5))
+				switch (gEngfuncs.pfnRandomLong(0, 2))
 				{
 					
 				case 0: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_concrete01.spr"); break;
@@ -597,12 +597,6 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 				case 1: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_concrete02.spr"); break;
 					
 				case 2: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_concrete03.spr"); break;
-					
-				case 3: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_concrete04.spr"); break;
-					
-				case 4: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_concrete05.spr"); break;
-					
-				case 5: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_concrete06.spr"); break;
 					
 				}
 			
@@ -627,7 +621,7 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 		}
 		if (Material == 1)//metal, vent, grate
 		{
-				switch (gEngfuncs.pfnRandomLong(0, 5))
+				switch (gEngfuncs.pfnRandomLong(0, 2))
 					
 				{
 					
@@ -636,12 +630,6 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 				case 1: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_metal02.spr"); break;
 					
 				case 2: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_metal03.spr"); break;
-					
-				case 3: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_metal04.spr"); break;
-					
-				case 4: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_metal05.spr"); break;
-					
-				case 5: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_metal06.spr"); break;
 					
 				}
 			
@@ -660,7 +648,7 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 			
 		{
 			
-				switch (gEngfuncs.pfnRandomLong(0, 5))
+				switch (gEngfuncs.pfnRandomLong(0, 2))
 					
 				{
 					
@@ -669,12 +657,6 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 				case 1: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_wood02.spr"); break;
 					
 				case 2: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_wood03.spr"); break;
-					
-				case 3: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_wood04.spr"); break;
-					
-				case 4: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_wood05.spr"); break;
-					
-				case 5: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_wood06.spr"); break;
 					
 				}
 			
@@ -701,7 +683,7 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 			
 		{
 			
-				switch (gEngfuncs.pfnRandomLong(0, 5))
+				switch (gEngfuncs.pfnRandomLong(0, 2))
 					
 				{
 					
@@ -710,12 +692,6 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 				case 1: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_dirt02.spr"); break;
 					
 				case 2: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_dirt03.spr"); break;
-					
-				case 3: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_dirt04.spr"); break;
-					
-				case 4: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_dirt05.spr"); break;
-					
-				case 5: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_dirt06.spr"); break;
 					
 				}
 			
@@ -742,19 +718,13 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 			
 		{
 			
-				switch (gEngfuncs.pfnRandomLong(0, 5))
+				switch (gEngfuncs.pfnRandomLong(0, 2))
 				{
 				case 0: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_glass01.spr"); break;
 					
 				case 1: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_glass02.spr"); break;
 					
 				case 2: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_glass03.spr"); break;
-					
-				case 3: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_glass04.spr"); break;
-					
-				case 4: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_glass05.spr"); break;
-					
-				case 5: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_glass06.spr"); break;
 				}
 			
 			fDoPuffs = false;
@@ -770,17 +740,13 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 		}
 		if (Material == 5)//computer
 		{
-				switch (gEngfuncs.pfnRandomLong(0, 4))
+				switch (gEngfuncs.pfnRandomLong(0, 2))
 				{
 				case 0: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_computer01.spr"); break;
 					
 				case 1: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_computer02.spr"); break;
 					
 				case 2: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_computer03.spr"); break;
-					
-				case 3: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_computer04.spr"); break;
-					
-				case 4: m_iParticle = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/debris/debris_computer05.spr"); break;
 				}
 			
 			fDoPuffs = false;
@@ -832,7 +798,7 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 					
 				{
 					
-						switch (iRand % 5)
+						switch (iRand % 3)
 							
 						{
 							
@@ -841,10 +807,6 @@ void EV_HLDM_Particles(vec_t Pos_X, vec_t Pos_Y, vec_t Pos_Z, float PosNorm_X, f
 						case 1:	gEngfuncs.pEventAPI->EV_PlaySound(-1, pTrace->endpos, 0, "ricochet/ric2.wav", 1.0, ATTN_NORM, 0, PITCH_NORM); break;
 							
 						case 2:	gEngfuncs.pEventAPI->EV_PlaySound(-1, pTrace->endpos, 0, "ricochet/ric3.wav", 1.0, ATTN_NORM, 0, PITCH_NORM); break;
-							
-						case 3:	gEngfuncs.pEventAPI->EV_PlaySound(-1, pTrace->endpos, 0, "ricochet/ric4.wav", 1.0, ATTN_NORM, 0, PITCH_NORM); break;
-							
-						case 4:	gEngfuncs.pEventAPI->EV_PlaySound(-1, pTrace->endpos, 0, "ricochet/ric5.wav", 1.0, ATTN_NORM, 0, PITCH_NORM); break;
 						}
 				}
 		}
