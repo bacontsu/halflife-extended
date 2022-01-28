@@ -717,6 +717,7 @@ public:
 
 	cvar_t* m_pCvarStealMouse;
 	cvar_t* m_pCvarDraw;
+	cvar_t* RainInfo;
 
 	//magic nipples - view lag
 	float lagangle_x;
@@ -810,6 +811,7 @@ public:
 	int _cdecl MsgFunc_WaterSplash(const char* pszName, int iSize, void* pbuf);
 	int _cdecl MsgFunc_DropMag(const char* pszName, int iSize, void* pbuf);
 	int _cdecl MsgFunc_Impact(const char* pszName, int iSize, void* pbuf);
+	int  _cdecl MsgFunc_RainData(const char* pszName, int iSize, void* pbuf);
 
 	
 

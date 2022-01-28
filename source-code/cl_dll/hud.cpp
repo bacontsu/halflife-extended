@@ -31,6 +31,8 @@
 #include "demo_api.h"
 #include "vgui_ScorePanel.h"
 
+#include "rain.h"
+
 hud_player_info_t	 g_PlayerInfoList[MAX_PLAYERS + 1];	   // player info from the engine
 extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS + 1];   // additional player info sent directly to the client dll
 
@@ -131,6 +133,13 @@ int __MsgFunc_SetSky(const char* pszName, int iSize, void* pbuf)
 
 	return 1;
 }
+
+
+int __MsgFunc_RainData(const char* pszName, int iSize, void* pbuf)
+{
+	return gHUD.MsgFunc_RainData(pszName, iSize, pbuf);
+}
+
 
 int __MsgFunc_InitHUD(const char* pszName, int iSize, void* pbuf)
 {
@@ -370,6 +379,9 @@ int __MsgFunc_StatsPlayer(const char* pszName, int iSize, void* pbuf)
 // This is called every time the DLL is loaded
 void CHud::Init()
 {
+
+	InitRain();
+
 	HOOK_MESSAGE(Logo);
 	HOOK_MESSAGE(ResetHUD);
 	HOOK_MESSAGE(GameMode);
@@ -380,6 +392,7 @@ void CHud::Init()
 	HOOK_MESSAGE(SetSky); //LRC
 	HOOK_MESSAGE(HudColor);
 	HOOK_MESSAGE(OldWeapon);
+	HOOK_MESSAGE(RainData);
 	
 
 	// TFFree CommandMenu
@@ -451,6 +464,7 @@ void CHud::Init()
 	cl_rollangle = CVAR_CREATE("cl_rollangle", "2.0", FCVAR_ARCHIVE);
 	cl_rollspeed = CVAR_CREATE("cl_rollspeed", "200", FCVAR_ARCHIVE);
 	cl_bobtilt = CVAR_CREATE("cl_bobtilt", "0", FCVAR_ARCHIVE);
+	RainInfo = gEngfuncs.pfnRegisterVariable("cl_raininfo", "0", 0);
 
 	m_pSpriteList = NULL;
 
@@ -501,6 +515,8 @@ void CHud::Init()
 // cleans up memory allocated for m_rg* arrays
 CHud :: ~CHud()
 {
+	ResetRain();
+
 	delete[] m_rghSprites;
 	delete[] m_rgrcRects;
 	delete[] m_rgszSpriteNames;
@@ -536,6 +552,8 @@ int CHud::GetSpriteIndex(const char* SpriteName)
 
 void CHud::VidInit()
 {
+	ResetRain();
+
 	m_scrinfo.iSize = sizeof(m_scrinfo);
 	GetScreenInfo(&m_scrinfo);
 

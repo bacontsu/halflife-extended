@@ -24,6 +24,7 @@
 #include "studio.h"
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
+#include "rain.h"
 
 extern CGameStudioModelRenderer g_StudioRenderer;
 
@@ -102,6 +103,34 @@ int CHud::MsgFunc_Impact(const char* pszName, int iSize, void* pbuf)
 	return 1;
 
 }
+
+extern rain_properties Rain;
+
+int CHud::MsgFunc_RainData(const char* pszName, int iSize, void* pbuf)
+{
+	
+	BEGIN_READ(pbuf, iSize);
+	
+	Rain.dripsPerSecond = READ_SHORT();
+	
+	Rain.distFromPlayer = READ_COORD();
+	
+	Rain.windX = READ_COORD();
+	
+	Rain.windY = READ_COORD();
+	
+	Rain.randX = READ_COORD();
+	
+	Rain.randY = READ_COORD();
+	
+	Rain.weatherMode = READ_SHORT();
+	
+	Rain.globalHeight = READ_COORD();
+	
+	return 1;
+	
+}
+
 
 
 #if !defined( _TFC )
