@@ -83,6 +83,7 @@ int gmsgViewmodelSkin = 0; // Weapon Model Skinfamilies
 int gmsgSetSky = 0;		//LRC
 int gmsgZoom = 0;
 int gmsgImpact = 0;
+int gmsgRainData = 0;
 
 
 
@@ -142,8 +143,9 @@ void LinkUserMessages()
 
 	gmsgZoom = REG_USER_MSG("ZoomHud", 1);
 
-
 	gmsgImpact = REG_USER_MSG("Impact", -1);
+
+	gmsgRainData = REG_USER_MSG("RainData", 16);
 
 	gmsgSpectator = g_engfuncs.pfnRegUserMsg("Spectator", 2);
 	gmsgStatusIcon = g_engfuncs.pfnRegUserMsg("StatusIcon", -1);

@@ -76,6 +76,7 @@ extern int gmsgViewmodelSkin; //add by bacontsu
 extern int gmsgSetSky;// LRC
 extern int gmsgZoom;
 extern int gmsgImpact;
+extern int gmsgRainData;
 
 
 

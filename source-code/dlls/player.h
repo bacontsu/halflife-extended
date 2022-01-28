@@ -225,6 +225,21 @@ public:
 	float m_flJumpTime;
 	float m_flNextChatTime;
 
+
+	int		Rain_dripsPerSecond = 0;
+	float	Rain_windX = 0, Rain_windY = 0;
+	float	Rain_randX = 0, Rain_randY = 0;
+
+	int		Rain_ideal_dripsPerSecond = 0;
+	float	Rain_ideal_windX = 0, Rain_ideal_windY = 0;
+	float	Rain_ideal_randX = 0, Rain_ideal_randY = 0;
+
+	float	Rain_endFade = 0; // 0 means off
+	float	Rain_nextFadeUpdate = 0;
+	
+	int		Rain_needsUpdate;
+
+
 	EHANDLE	m_pHoldable;
 
 	BOOL m_bSendMessages;
