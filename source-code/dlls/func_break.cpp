@@ -1009,8 +1009,61 @@ void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 		return;
 	}
 
-	if ( pActivator->pev->velocity != g_vecZero )
-		Move( pActivator, 0 );
+	// experimental pull feature
+	UTIL_MakeVectors(pActivator->pev->v_angle);
+	Vector vecSrc = pActivator->pev->origin + gpGlobals->v_up * 36;
+	TraceResult tr;
+	float length = (abs(pev->maxs.x - pev->mins.x)) / 2;
+	float width = (abs(pev->maxs.y - pev->mins.y)) / 2;
+	Vector realOrigin = pev->origin + (pev->maxs + pev->mins)/2;
+	edict_t* pentIgnore;
+	pentIgnore = ENT(pActivator->pev);
+
+	if (length >= width)
+	{
+		UTIL_TraceLine(vecSrc, vecSrc + gpGlobals->v_forward * 2 * length, dont_ignore_monsters, pentIgnore, &tr);
+		CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
+		if (pEntity->pev == this->pev)
+		{
+			pentIgnore = ENT(this->pev);
+			UTIL_TraceLine(tr.vecEndPos, tr.vecEndPos + gpGlobals->v_forward * 2 * length * (1 - tr.flFraction), dont_ignore_monsters, pentIgnore, &tr);
+		}
+	}
+	else
+	{
+		UTIL_TraceLine(vecSrc, vecSrc + gpGlobals->v_forward * 2 * width, dont_ignore_monsters, pentIgnore, &tr);
+		CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
+		if (pEntity->pev == this->pev)
+		{
+			pentIgnore = ENT(this->pev);
+			UTIL_TraceLine(tr.vecEndPos, tr.vecEndPos + gpGlobals->v_forward * 2 * width * (1 - tr.flFraction), dont_ignore_monsters, pentIgnore, &tr);
+		}
+	}
+
+	pev->velocity.x = (tr.vecEndPos.x - realOrigin.x) * 5;
+	pev->velocity.y = (tr.vecEndPos.y - realOrigin.y) * 5;
+	pev->velocity.z += 0.1f;
+	//ALERT(at_console, "player speed : %f %f", pActivator->pev->velocity.x, pActivator->pev->velocity.y);
+	
+	// limit player speed
+	int speedLimit = 50;
+		if (pActivator->pev->velocity.x >= speedLimit)
+		{
+			pActivator->pev->velocity.x = speedLimit;
+		}
+		if (pActivator->pev->velocity.x < -speedLimit)
+		{
+			pActivator->pev->velocity.x = -speedLimit;
+		}
+	
+		if (pActivator->pev->velocity.y >= speedLimit)
+		{
+			pActivator->pev->velocity.y = speedLimit;
+		}
+		if (pActivator->pev->velocity.y < -speedLimit)
+		{
+			pActivator->pev->velocity.y = -speedLimit;
+		}
 }
 
 
