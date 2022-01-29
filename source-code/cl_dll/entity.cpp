@@ -362,7 +362,8 @@ void DLLEXPORT HUD_CreateEntities()
 	else if (!gHUD.isThirdPerson)
 		player->model = gEngfuncs.CL_LoadModel("models/Body1.mdl", 0);
 
-	if(CVAR_GET_FLOAT("cl_showplayer") == 1 && gHUD.m_flTimeDelta > 0 && CVAR_GET_FLOAT("developer") == 0 && !gHUD.isThirdPerson && gHUD.playerHealth > 0)
+
+	if(CVAR_GET_FLOAT("cl_showplayer") == 1 && !gHUD.isPaused && CVAR_GET_FLOAT("developer") == 0 && !gHUD.isThirdPerson && gHUD.playerHealth > 0)
 	BodyTest();
 
 //	RecClCreateEntities();

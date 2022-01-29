@@ -729,6 +729,7 @@ public:
 
 	bool isThirdPerson;
 	int playerHealth;
+	bool isPaused;
 
 
 	int m_iFontHeight;
