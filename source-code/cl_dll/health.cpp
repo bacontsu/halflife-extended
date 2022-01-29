@@ -171,6 +171,7 @@ void CHudHealth::GetPainColor( int &r, int &g, int &b )
 
 int CHudHealth::Draw(float flTime)
 {
+	gHUD.playerHealth = m_iHealth;
 	int r, g, b;
 	int a = 0, x, y;
 	int HealthWidth;

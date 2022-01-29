@@ -728,6 +728,7 @@ public:
 	float velz;
 
 	bool isThirdPerson;
+	int playerHealth;
 
 
 	int m_iFontHeight;
