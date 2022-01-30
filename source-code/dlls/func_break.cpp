@@ -823,6 +823,8 @@ public:
 	void	EXPORT StopSound();
 //	virtual void	SetActivator( CBaseEntity *pActivator ) { m_pPusher = pActivator; }
 
+	void	Killed(entvars_t* pevAttacker, int iGib) override;
+
 	virtual int	ObjectCaps(void)
 		
 	{
@@ -850,6 +852,8 @@ public:
 	float	m_soundTime;
 	
 	int m_SpawnChance;
+	CBasePlayer* m_pPlayer = nullptr;
+	float usedTime = 0.0f;
 };
 
 TYPEDESCRIPTION	CPushable::m_SaveData[] = 
@@ -1013,7 +1017,7 @@ void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 	if (pActivator->pev->flags & FL_ONGROUND && VARS(pActivator->pev->groundentity) != this->pev)
 	{
 		UTIL_MakeVectors(pActivator->pev->v_angle);
-		Vector vecSrc = pActivator->pev->origin + gpGlobals->v_up * 36;
+		Vector vecSrc = pActivator->pev->origin + gpGlobals->v_up * 36; 
 		TraceResult tr;
 		float length = (abs(pev->maxs.x - pev->mins.x)) / 2;
 		float width = (abs(pev->maxs.y - pev->mins.y)) / 2;
@@ -1021,11 +1025,11 @@ void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 		edict_t* pentIgnore;
 		pentIgnore = ENT(pActivator->pev);
 
-		if (length >= width)
+		if (length >= width) // Pick the longest side as offset
 		{
 			UTIL_TraceLine(vecSrc, vecSrc + gpGlobals->v_forward * 2 * length, dont_ignore_monsters, pentIgnore, &tr);
 			CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
-			if (pEntity->pev == this->pev)
+			if (pEntity->pev == this->pev) // hits itself, continue tracing
 			{
 				pentIgnore = ENT(this->pev);
 				UTIL_TraceLine(tr.vecEndPos, tr.vecEndPos + gpGlobals->v_forward * 2 * length * (1 - tr.flFraction), dont_ignore_monsters, pentIgnore, &tr);
@@ -1035,7 +1039,7 @@ void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 		{
 			UTIL_TraceLine(vecSrc, vecSrc + gpGlobals->v_forward * 2 * width, dont_ignore_monsters, pentIgnore, &tr);
 			CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
-			if (pEntity->pev == this->pev)
+			if (pEntity->pev == this->pev) // hits itself, continue tracing
 			{
 				pentIgnore = ENT(this->pev);
 				UTIL_TraceLine(tr.vecEndPos, tr.vecEndPos + gpGlobals->v_forward * 2 * width * (1 - tr.flFraction), dont_ignore_monsters, pentIgnore, &tr);
@@ -1044,28 +1048,12 @@ void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 
 		pev->velocity.x = (tr.vecEndPos.x - realOrigin.x) * 5;
 		pev->velocity.y = (tr.vecEndPos.y - realOrigin.y) * 5;
-		pev->velocity.z += 0.1f;
-		//ALERT(at_console, "player speed : %f %f", pActivator->pev->velocity.x, pActivator->pev->velocity.y);
+		pev->velocity.z += 0.1f; // slightly lift it up due to fraction
+		
+		m_pPlayer = static_cast<CBasePlayer*>(pActivator);
+		usedTime = gpGlobals->time;
 
-		// limit player speed
-		int speedLimit = 50;
-		if (pActivator->pev->velocity.x >= speedLimit)
-		{
-			pActivator->pev->velocity.x = speedLimit;
-		}
-		if (pActivator->pev->velocity.x < -speedLimit)
-		{
-			pActivator->pev->velocity.x = -speedLimit;
-		}
 
-		if (pActivator->pev->velocity.y >= speedLimit)
-		{
-			pActivator->pev->velocity.y = speedLimit;
-		}
-		if (pActivator->pev->velocity.y < -speedLimit)
-		{
-			pActivator->pev->velocity.y = -speedLimit;
-		}
 	}
 }
 
@@ -1078,6 +1066,15 @@ void CPushable :: Touch( CBaseEntity *pOther )
 	Move( pOther, 1 );
 }
 
+
+void CPushable::Killed(entvars_t* pevAttacker, int iGib)
+{
+	if (m_pPlayer)
+	{
+		m_pPlayer->pev->maxspeed = 0;
+		m_pPlayer = nullptr;
+	}
+}
 
 void CPushable :: Move( CBaseEntity *pOther, int push )
 {
@@ -1187,8 +1184,10 @@ void CPushable::StopSound()
 
 int CPushable::TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType )
 {
-	if ( pev->spawnflags & SF_PUSH_BREAKABLE )
-		return CBreakable::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	if (pev->spawnflags & SF_PUSH_BREAKABLE)
+	{
+		return CBreakable::TakeDamage(pevInflictor, pevAttacker, flDamage, bitsDamageType);
+	}
 
 	return 1;
 }
@@ -1199,4 +1198,16 @@ void CPushable::AddGravity(void)
 	pev->velocity.z += (pev->basevelocity.z * gpGlobals->frametime);
 	pev->basevelocity.z = 0.0;
 	pev->nextthink = pev->ltime + 0.1;
+
+	// limit player's speed
+	if (m_pPlayer)
+	{
+		if (usedTime < gpGlobals->time)
+		{
+			m_pPlayer->pev->maxspeed = 0;
+			m_pPlayer = nullptr;
+		}
+		else
+			m_pPlayer->pev->maxspeed = 70;
+	}
 }
