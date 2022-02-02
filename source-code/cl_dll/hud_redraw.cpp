@@ -22,6 +22,8 @@
 #include "vgui_TeamFortressViewport.h"
 #include "vgui_StatsMenuPanel.h"
 
+void HUD_DrawBloodOverlay( void );
+
 #define MAX_LOGO_FRAMES 56
 
 int grgLogoFrame[MAX_LOGO_FRAMES] = 
@@ -97,6 +99,8 @@ void CHud::Think()
 // returns 1 if they've changed, 0 otherwise
 int CHud :: Redraw( float flTime, int intermission )
 {
+	HUD_DrawBloodOverlay();
+
 	m_fOldTime = m_flTime;	// save time of previous redraw
 	m_flTime = flTime;
 	m_flTimeDelta = (double)m_flTime - m_fOldTime;

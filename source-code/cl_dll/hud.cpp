@@ -448,9 +448,6 @@ void CHud::Init()
 	CVAR_CREATE("cl_hands", "1", FCVAR_ARCHIVE);// modular hand cvar check
 	CVAR_CREATE("cl_showplayer", "0", FCVAR_ARCHIVE);// clientside player model
 
-	CVAR_CREATE("batterytest", "1", FCVAR_ARCHIVE);// hud B value
-
-
 	m_iLogo = 0;
 	m_iFOV = 0;
 	setNightVisionState(false);
