@@ -536,6 +536,8 @@ void CScientist :: StartTask( Task_t *pTask )
 		m_hTalkTarget = m_hTargetEnt;
 		if (FClassnameIs(pev, "monster_rosenberg"))
 			PlaySentence("RO_HEAL", 2, VOL_NORM, ATTN_IDLE);
+		if (FClassnameIs(pev, "monster_scientist_female"))
+			PlaySentence("FS_HEAL", 2, VOL_NORM, ATTN_IDLE);
 		else	PlaySentence("SC_HEAL", 2, VOL_NORM, ATTN_IDLE);
 		TaskComplete();
 		break;
@@ -565,7 +567,12 @@ void CScientist :: StartTask( Task_t *pTask )
 				{
 					if (m_hEnemy->IsPlayer())
 						PlaySentence("SC_PLFEAR", 5, VOL_NORM, ATTN_NORM);
-					else	PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
+					else if (FClassnameIs(pev, "monster_janitor"))
+							PlaySentence("CL_COMBAT", 5, VOL_NORM, ATTN_NORM);
+					else if (FClassnameIs(pev, "monster_scientist_female"))
+						PlaySentence("FS_COMBAT", 5, VOL_NORM, ATTN_NORM);
+					else
+						PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
 				}
 		}
 		TaskComplete();
@@ -818,6 +825,7 @@ void CScientist :: Precache()
 		PRECACHE_MODEL("models/scientist_hev.mdl");
 	else PRECACHE_MODEL("models/scientist.mdl");
 
+
 	PRECACHE_SOUND("scientist/sci_pain1.wav");
 	PRECACHE_SOUND("scientist/sci_pain2.wav");
 	PRECACHE_SOUND("scientist/sci_pain3.wav");
@@ -838,11 +846,16 @@ void CScientist :: TalkInit()
 	CTalkMonster::TalkInit();
 
 	// scientist will try to talk to friends in this order:
-
-	m_szFriends[0] = "monster_scientist";
+	/*m_szFriends[0] = "monster_scientist";
 	m_szFriends[1] = "monster_sitting_scientist";
 	m_szFriends[2] = "monster_barney";
 	m_szFriends[3] = "monster_barney_hev";
+	m_szFriends[4] = "monster_scientist_female";
+	m_szFriends[5] = "monster_rosenberg";
+	m_szFriends[6] = "monster_janitor";
+	m_szFriends[7] = "monster_worker";
+	m_szFriends[8] = "monster_construction";
+	m_szFriends[9] = "monster_chef";*/
 
 	// scientists speach group names (group names are in sentences.txt)
 	if (FClassnameIs(pev, "monster_rosenberg"))
@@ -984,6 +997,7 @@ void CScientist::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecD
 				if (flDamage <= 0)
 				{
 					UTIL_Ricochet(ptr->vecEndPos, 1.0);
+					UTIL_Sparks(ptr->vecEndPos);
 					flDamage *= 0.01;
 				}
 
@@ -1246,7 +1260,7 @@ MONSTERSTATE CScientist :: GetIdealState ()
 
 BOOL CScientist::CanHeal()
 { 
-	if (FClassnameIs(pev, "monster_rosenberg") || FClassnameIs(pev, "monster_scientist"))
+	if (FClassnameIs(pev, "monster_rosenberg") || FClassnameIs(pev, "monster_scientist") || FClassnameIs(pev, "monster_scientist_female"))
 	{
 		if ((m_healTime > gpGlobals->time) || (m_hTargetEnt == NULL) || (m_hTargetEnt->pev->health > (m_hTargetEnt->pev->max_health * 0.5)))
 			return FALSE;
@@ -1702,6 +1716,10 @@ public:
 	void HandleAnimEvent(MonsterEvent_t* pEvent);
 	BOOL CanHeal(void);
 	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;
+	void TalkInit();
+
+	void PainSound();
+	void DeathSound();
 
 private:
 	float m_painTime;
@@ -1770,6 +1788,41 @@ BOOL CWorker::CanHeal()
 		return FALSE;
 };
 
+void CWorker::DeathSound()
+{
+	switch (RANDOM_LONG(0, 1))
+	{
+	case 0:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_die1.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 1:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_die2.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	}
+}
+
+void CWorker::PainSound()
+{
+	switch (RANDOM_LONG(0, 4))
+	{
+	case 0:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain1.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 1:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain2.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 2:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain3.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 3:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain4.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 4:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain5.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	}
+}
+
 //=========================================================
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
@@ -1820,17 +1873,53 @@ void CWorker::Spawn(void)
 	SetUse(&CWorker::FollowerUse);
 }
 
+void CWorker::TalkInit()
+{
+	CTalkMonster::TalkInit();
+
+	// scientists speach group names (group names are in sentences.txt)
+
+	m_szGrp[TLK_ANSWER] = "CN_ANSWER";
+	m_szGrp[TLK_QUESTION] = "CN_QUESTION";
+	m_szGrp[TLK_IDLE] = "CN_IDLE";
+	m_szGrp[TLK_STARE] = NULL;
+	m_szGrp[TLK_USE] = "CN_OK";
+	m_szGrp[TLK_UNUSE] = "CN_WAIT";
+	m_szGrp[TLK_STOP] = NULL;
+	m_szGrp[TLK_NOSHOOT] = NULL;
+	m_szGrp[TLK_HELLO] = NULL;
+
+	m_szGrp[TLK_PLHURT1] = NULL;
+	m_szGrp[TLK_PLHURT2] = NULL;
+	m_szGrp[TLK_PLHURT3] = NULL;
+
+	m_szGrp[TLK_PHELLO] = NULL;
+	m_szGrp[TLK_PIDLE] = NULL;
+	m_szGrp[TLK_PQUESTION] = NULL;
+	m_szGrp[TLK_SMELL] = NULL;
+
+	m_szGrp[TLK_WOUND] = NULL;
+	m_szGrp[TLK_MORTAL] = NULL;
+
+
+	m_voicePitch = 93 + RANDOM_LONG(0, 13);// some voice diversity
+}
+
 //=========================================================
 // Precache - precaches all resources this monster needs
 //=========================================================
 void CWorker::Precache(void)
 {
 	PRECACHE_MODEL("models/worker.mdl");
-	PRECACHE_SOUND("scientist/sci_pain1.wav");
-	PRECACHE_SOUND("scientist/sci_pain2.wav");
-	PRECACHE_SOUND("scientist/sci_pain3.wav");
-	PRECACHE_SOUND("scientist/sci_pain4.wav");
-	PRECACHE_SOUND("scientist/sci_pain5.wav");
+	PRECACHE_SOUND("conwork/work_pain1.wav");
+	PRECACHE_SOUND("conwork/work_pain2.wav");
+	PRECACHE_SOUND("conwork/work_pain3.wav");
+	PRECACHE_SOUND("conwork/work_pain4.wav");
+	PRECACHE_SOUND("conwork/work_pain5.wav");
+
+
+	PRECACHE_SOUND("conwork/work_die1.wav");
+	PRECACHE_SOUND("conwork/work_die2.wav");
 
 	// every new scientist must call this, otherwise
 	// when a level is loaded, nobody will talk (time is reset to 0)
@@ -2006,11 +2095,6 @@ void CChef::Spawn(void)
 void CChef::Precache(void)
 {
 	PRECACHE_MODEL("models/chef.mdl");
-	PRECACHE_SOUND("scientist/sci_pain1.wav");
-	PRECACHE_SOUND("scientist/sci_pain2.wav");
-	PRECACHE_SOUND("scientist/sci_pain3.wav");
-	PRECACHE_SOUND("scientist/sci_pain4.wav");
-	PRECACHE_SOUND("scientist/sci_pain5.wav");
 
 	// every new scientist must call this, otherwise
 	// when a level is loaded, nobody will talk (time is reset to 0)
@@ -2372,13 +2456,20 @@ void CJanitor::Spawn(void)
 void CJanitor::Precache(void)
 {
 	PRECACHE_MODEL("models/janitor.mdl");
-	PRECACHE_SOUND("barney/ba_pain1.wav");
-	PRECACHE_SOUND("barney/ba_pain2.wav");
-	PRECACHE_SOUND("barney/ba_pain3.wav");
 
-	PRECACHE_SOUND("barney/ba_die1.wav");
-	PRECACHE_SOUND("barney/ba_die2.wav");
-	PRECACHE_SOUND("barney/ba_die3.wav");
+	PRECACHE_SOUND("cleaner/jan_pain1.wav");
+	PRECACHE_SOUND("cleaner/jan_pain2.wav");
+	PRECACHE_SOUND("cleaner/jan_pain3.wav");
+	PRECACHE_SOUND("cleaner/jan_pain4.wav");
+	PRECACHE_SOUND("cleaner/jan_pain5.wav");
+
+
+	PRECACHE_SOUND("cleaner/jan_die1.wav");
+	PRECACHE_SOUND("cleaner/jan_die2.wav");
+	PRECACHE_SOUND("cleaner/jan_die3.wav");
+	PRECACHE_SOUND("cleaner/jan_die4.wav");
+	PRECACHE_SOUND("cleaner/jan_die5.wav");
+	PRECACHE_SOUND("cleaner/jan_die6.wav");
 
 	// every new scientist must call this, otherwise
 	// when a level is loaded, nobody will talk (time is reset to 0)
@@ -2395,29 +2486,29 @@ void CJanitor::TalkInit()
 
 	// scientists speach group names (group names are in sentences.txt)
 
-	m_szGrp[TLK_ANSWER] = "OT_ANSWER";
-	m_szGrp[TLK_QUESTION] = "OT_QUESTION";
-	m_szGrp[TLK_IDLE] = "OT_IDLE";
-	m_szGrp[TLK_STARE] = "OT_STARE";
-	m_szGrp[TLK_USE] = "OT_OK";
-	m_szGrp[TLK_UNUSE] = "OT_WAIT";
-	m_szGrp[TLK_STOP] = "OT_STOP";
+	m_szGrp[TLK_ANSWER] = "CL_ANSWER";
+	m_szGrp[TLK_QUESTION] = "CL_QUESTION";
+	m_szGrp[TLK_IDLE] = NULL;
+	m_szGrp[TLK_STARE] = NULL;
+	m_szGrp[TLK_USE] = "CL_OK";
+	m_szGrp[TLK_UNUSE] = "CL_WAIT";
+	m_szGrp[TLK_STOP] = NULL;
 
-	m_szGrp[TLK_NOSHOOT] = "OT_SCARED";
-	m_szGrp[TLK_HELLO] = "OT_HELLO";
+	m_szGrp[TLK_NOSHOOT] = "CL_COMBAT";
+	m_szGrp[TLK_HELLO] = NULL;
 
-	m_szGrp[TLK_PLHURT1] = "!BA_CUREA";
-	m_szGrp[TLK_PLHURT2] = "!BA_CUREB";
-	m_szGrp[TLK_PLHURT3] = "!BA_CUREC";
+	m_szGrp[TLK_PLHURT1] = NULL;
+	m_szGrp[TLK_PLHURT2] = NULL;
+	m_szGrp[TLK_PLHURT3] = NULL;
 
 	m_szGrp[TLK_PHELLO] = NULL;	//"OT_PHELLO";		// UNDONE
 	m_szGrp[TLK_PIDLE] = NULL;	//"OT_PIDLE";			// UNDONE
-	m_szGrp[TLK_PQUESTION] = "OT_PQUEST";		// UNDONE
+	m_szGrp[TLK_PQUESTION] = NULL;		// UNDONE
 
-	m_szGrp[TLK_SMELL] = "OT_SMELL";
+	m_szGrp[TLK_SMELL] = NULL;
 
-	m_szGrp[TLK_WOUND] = "OT_WOUND";
-	m_szGrp[TLK_MORTAL] = "OT_MORTAL";
+	m_szGrp[TLK_WOUND] = NULL;
+	m_szGrp[TLK_MORTAL] = NULL;
 
 	// get voice for head - just one otis voice for now
 	m_voicePitch = 100;
@@ -2442,11 +2533,13 @@ void CJanitor::PainSound()
 
 	m_painTime = gpGlobals->time + RANDOM_FLOAT(0.5, 0.75);
 
-	switch (RANDOM_LONG(0, 2))
+	switch (RANDOM_LONG(0, 4))
 	{
-	case 0: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "barney/ba_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 1: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "barney/ba_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 2: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "barney/ba_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 0: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 1: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 2: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 3: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 4: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
 	}
 }
 
@@ -2455,11 +2548,14 @@ void CJanitor::PainSound()
 //=========================================================
 void CJanitor::DeathSound()
 {
-	switch (RANDOM_LONG(0, 2))
+	switch (RANDOM_LONG(0, 5))
 	{
-	case 0: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "barney/ba_die1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 1: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "barney/ba_die2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
-	case 2: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "barney/ba_die3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 0: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_die1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 1: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_die2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 2: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_die3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 3: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_die4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 4: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_die5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 5: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "cleaner/jan_die6.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
 	}
 }
 
@@ -2564,6 +2660,9 @@ public:
 	void TalkInit();
 	void DeclineFollowing();
 
+	void DeathSound();
+	void PainSound();
+
 	int m_Helm;
 	int m_Gloves;
 
@@ -2647,6 +2746,41 @@ void CConstruction::Heal()
 	return;
 };
 
+void CConstruction::DeathSound()
+{
+	switch (RANDOM_LONG(0, 1))
+	{
+	case 0:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_die1.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 1:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_die2.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	}
+}
+
+void CConstruction::PainSound()
+{
+	switch (RANDOM_LONG(0, 4))
+	{
+	case 0:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain1.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 1:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain2.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 2:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain3.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 3:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain4.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	case 4:
+		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "conwork/work_pain5.wav", VOL_NORM, ATTN_NORM, 0, GetVoicePitch());
+		break;
+	}
+}
+
 //=========================================================
 // HandleAnimEvent - catches the monster-specific messages
 // that occur when tagged animation frames are played.
@@ -2721,13 +2855,17 @@ void CConstruction::Spawn(void)
 //=========================================================
 void CConstruction::Precache(void)
 {
-	PRECACHE_MODEL("models/construction.mdl");
-	PRECACHE_SOUND("scientist/sci_pain1.wav");
-	PRECACHE_SOUND("scientist/sci_pain2.wav");
-	PRECACHE_SOUND("scientist/sci_pain3.wav");
-	PRECACHE_SOUND("scientist/sci_pain4.wav");
-	PRECACHE_SOUND("scientist/sci_pain5.wav");
 
+	PRECACHE_MODEL("models/construction.mdl");
+	PRECACHE_SOUND("conwork/work_pain1.wav");
+	PRECACHE_SOUND("conwork/work_pain2.wav");
+	PRECACHE_SOUND("conwork/work_pain3.wav");
+	PRECACHE_SOUND("conwork/work_pain4.wav");
+	PRECACHE_SOUND("conwork/work_pain5.wav");
+
+
+	PRECACHE_SOUND("conwork/work_die1.wav");
+	PRECACHE_SOUND("conwork/work_die2.wav");
 	// every new scientist must call this, otherwise
 	// when a level is loaded, nobody will talk (time is reset to 0)
 	TalkInit();
@@ -2740,36 +2878,29 @@ void CConstruction::TalkInit()
 
 	CTalkMonster::TalkInit();
 
-	// scientist will try to talk to friends in this order:
-
-	m_szFriends[0] = "monster_scientist";
-	m_szFriends[1] = "monster_sitting_scientist";
-	m_szFriends[2] = "monster_barney";
-	m_szFriends[3] = "monster_barney_hev";
-
 	// scientists speach group names (group names are in sentences.txt)
 	
-	m_szGrp[TLK_ANSWER] = "SC_ANSWER";
+	m_szGrp[TLK_ANSWER] = "CN_ANSWER";
 	m_szGrp[TLK_QUESTION] = "CN_QUESTION";
-	m_szGrp[TLK_IDLE] = "SC_IDLE";
-	m_szGrp[TLK_STARE] = "SC_STARE";
-	m_szGrp[TLK_USE] = "SC_OK";
-	m_szGrp[TLK_UNUSE] = "SC_WAIT";
-	m_szGrp[TLK_STOP] = "SC_STOP";
-	m_szGrp[TLK_NOSHOOT] = "SC_SCARED";
-	m_szGrp[TLK_HELLO] = "SC_HELLO";
+	m_szGrp[TLK_IDLE] = "CN_IDLE";
+	m_szGrp[TLK_STARE] = NULL;
+	m_szGrp[TLK_USE] = "CN_OK";
+	m_szGrp[TLK_UNUSE] = "CN_WAIT";
+	m_szGrp[TLK_STOP] = NULL;
+	m_szGrp[TLK_NOSHOOT] = NULL;
+	m_szGrp[TLK_HELLO] = NULL;
 
-	m_szGrp[TLK_PLHURT1] = "!SC_CUREA";
-	m_szGrp[TLK_PLHURT2] = "!SC_CUREB";
-	m_szGrp[TLK_PLHURT3] = "!SC_CUREC";
+	m_szGrp[TLK_PLHURT1] = NULL;
+	m_szGrp[TLK_PLHURT2] = NULL;
+	m_szGrp[TLK_PLHURT3] = NULL;
 
-	m_szGrp[TLK_PHELLO] = "SC_PHELLO";
-	m_szGrp[TLK_PIDLE] = "SC_PIDLE";
-	m_szGrp[TLK_PQUESTION] = "SC_PQUEST";
-	m_szGrp[TLK_SMELL] = "SC_SMELL";
+	m_szGrp[TLK_PHELLO] = NULL;
+	m_szGrp[TLK_PIDLE] = NULL;
+	m_szGrp[TLK_PQUESTION] = NULL;
+	m_szGrp[TLK_SMELL] = NULL;
 
-	m_szGrp[TLK_WOUND] = "SC_WOUND";
-	m_szGrp[TLK_MORTAL] = "SC_MORTAL";
+	m_szGrp[TLK_WOUND] = NULL;
+	m_szGrp[TLK_MORTAL] = NULL;
 	
 
 	m_voicePitch = 93 + RANDOM_LONG(0, 13);// some voice diversity
@@ -2939,3 +3070,253 @@ void CDeadConstruction::Spawn()
 	MonsterInitDead();
 }
 
+
+//= ========================================
+// Janitor, based off scientist
+//=========================================
+
+class CFemSci : public CScientist
+{
+public:
+	void Spawn(void);
+	void Precache(void);
+	void HandleAnimEvent(MonsterEvent_t* pEvent);
+	void	Heal();
+	BOOL CanHeal(void);
+
+	void DeclineFollowing() override;
+
+	void DeathSound() override;
+	void PainSound() override;
+
+	void TalkInit();
+
+	void KeyValue(KeyValueData* pkvd) override;
+
+	int iHead;
+	int iArms;
+
+private:
+	float m_painTime;
+	float m_healTime;
+	float m_fearTime;
+};
+
+LINK_ENTITY_TO_CLASS(monster_scientist_female, CFemSci);
+
+namespace FemSciBodygroup
+{
+	enum FemSciBodygroup
+	{
+		Head = 1,
+		Arms
+	};
+}
+
+namespace FemSciHead
+{
+	enum FemSciHead
+	{
+		Random = -1,
+		Yelene = 0,
+		Ana,
+		Lorena,
+		Martha,
+		Silvia,
+		Maria,
+		Colette,
+		Gina
+	};
+}
+namespace FemSciArms
+{
+	enum FemSciArms
+	{
+		Random = -1,
+		Default = 0,
+		Needle,
+		Notebook,
+		Stick
+	};
+}
+
+void CFemSci::KeyValue(KeyValueData* pkvd)
+{
+	if (FStrEq("head", pkvd->szKeyName))
+	{
+		iHead = atoi(pkvd->szValue);
+		pkvd->fHandled = true;
+	}
+	if (FStrEq("arms", pkvd->szKeyName))
+	{
+		iArms = atoi(pkvd->szValue);
+		pkvd->fHandled = true;
+	}
+	else
+	{
+		CBaseMonster::KeyValue(pkvd);
+	}
+}
+
+BOOL CFemSci::CanHeal(void)
+{
+	return FALSE;
+}
+
+void CFemSci::Heal()
+{
+
+	return;
+
+}
+
+//=========================================================
+// HandleAnimEvent - catches the monster-specific messages
+// that occur when tagged animation frames are played.
+//=========================================================
+void CFemSci::HandleAnimEvent(MonsterEvent_t* pEvent)
+{
+	CTalkMonster::HandleAnimEvent(pEvent);
+}
+//==================================
+// Spawn
+//=====================================
+void CFemSci::Spawn(void)
+{
+	Precache();
+
+	SET_MODEL(ENT(pev), "models/scientist_female.mdl");
+	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
+
+	pev->solid = SOLID_SLIDEBOX;
+	pev->movetype = MOVETYPE_STEP;
+	m_bloodColor = BLOOD_COLOR_RED;
+	pev->health = gSkillData.scientistHealth;
+
+	// position of the eyes relative to monster's origin.
+	pev->view_ofs = Vector(0, 0, 50);
+
+	// NOTE: we need a wide field of view so scientists will notice player and say hello
+	m_flFieldOfView = VIEW_FIELD_WIDE;
+	m_MonsterState = MONSTERSTATE_NONE;
+	pev->body = 0;
+	if (pev->skin == -1)
+		pev->skin = RANDOM_LONG(0, 7);
+
+
+	//     m_flDistTooFar          = 256.0;
+
+	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_OPEN_DOORS | bits_CAP_AUTO_DOORS | bits_CAP_USE;
+
+	if (iHead == FemSciHead::Random)
+	{
+		iHead = RANDOM_LONG(0, 7);
+	}
+	if (iArms == FemSciArms::Random)
+	{
+		iArms = RANDOM_LONG(0, 3);
+	}
+
+	SetBodygroup(FemSciBodygroup::Head, iHead);
+	SetBodygroup(FemSciBodygroup::Arms, iArms);
+
+	MonsterInit();
+	SetUse(&CFemSci::FollowerUse);
+}
+
+//=========================================================
+// Precache - precaches all resources this monster needs
+//=========================================================
+void CFemSci::Precache(void)
+{
+	PRECACHE_MODEL("models/scientist_female.mdl");
+
+	PRECACHE_SOUND("femsci/femsci_pain1.wav");
+	PRECACHE_SOUND("femsci/femsci_pain2.wav");
+	PRECACHE_SOUND("femsci/femsci_pain3.wav");
+	PRECACHE_SOUND("femsci/femsci_pain4.wav");
+	PRECACHE_SOUND("femsci/femsci_pain5.wav");
+
+
+	PRECACHE_SOUND("femsci/femsci_die1.wav");
+	PRECACHE_SOUND("femsci/femsci_die2.wav");
+
+	// every new scientist must call this, otherwise
+	// when a level is loaded, nobody will talk (time is reset to 0)
+	TalkInit();
+
+	CTalkMonster::Precache();
+}
+
+// Init talk data
+void CFemSci::TalkInit()
+{
+
+	CTalkMonster::TalkInit();
+
+	// scientists speach group names (group names are in sentences.txt)
+
+	m_szGrp[TLK_ANSWER] = "FS_ANSWER";
+	m_szGrp[TLK_QUESTION] = "FS_QUESTION";
+	m_szGrp[TLK_IDLE] = NULL;
+	m_szGrp[TLK_STARE] = NULL;
+	m_szGrp[TLK_USE] = "FS_OK";
+	m_szGrp[TLK_UNUSE] = NULL;
+	m_szGrp[TLK_STOP] = NULL;
+
+	m_szGrp[TLK_NOSHOOT] = "FS_COMBAT";
+	m_szGrp[TLK_HELLO] = NULL;
+
+	m_szGrp[TLK_PLHURT1] = NULL;
+	m_szGrp[TLK_PLHURT2] = NULL;
+	m_szGrp[TLK_PLHURT3] = NULL;
+
+	m_szGrp[TLK_PHELLO] = NULL;	//"OT_PHELLO";		// UNDONE
+	m_szGrp[TLK_PIDLE] = NULL;	//"OT_PIDLE";			// UNDONE
+	m_szGrp[TLK_PQUESTION] = NULL;		// UNDONE
+
+	m_szGrp[TLK_SMELL] = NULL;
+
+	m_szGrp[TLK_WOUND] = NULL;
+	m_szGrp[TLK_MORTAL] = NULL;
+
+	// get voice for head - just one otis voice for now
+	m_voicePitch = 100;
+}
+
+void CFemSci::DeclineFollowing()
+{
+	PlaySentence("FS_POK", 3, VOL_NORM, ATTN_NORM);
+}
+
+//=========================================================
+// PainSound
+//=========================================================
+void CFemSci::PainSound()
+{
+	if (gpGlobals->time < m_painTime)
+		return;
+
+	m_painTime = gpGlobals->time + RANDOM_FLOAT(0.5, 0.75);
+
+	switch (RANDOM_LONG(0, 4))
+	{
+	case 0: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "femsci/femsci_pain1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 1: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "femsci/femsci_pain2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 2: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "femsci/femsci_pain3.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 3: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "femsci/femsci_pain4.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 4: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "femsci/femsci_pain5.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	}
+}
+
+//=========================================================
+// DeathSound 
+//=========================================================
+void CFemSci::DeathSound()
+{
+	switch (RANDOM_LONG(0, 1))
+	{
+	case 0: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "femsci/femsci_die1.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	case 1: EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "femsci/femsci_die2.wav", 1, ATTN_NORM, 0, GetVoicePitch()); break;
+	}
+}
