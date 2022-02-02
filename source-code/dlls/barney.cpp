@@ -791,6 +791,8 @@ void CBarney::Precache()
 void CBarney::TalkInit()
 {
 
+
+
 	CTalkMonster::TalkInit();
 
 	// scientists speach group names (group names are in sentences.txt)
@@ -939,6 +941,7 @@ void CBarney::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir,
 				if (flDamage <= 0)
 				{
 					UTIL_Ricochet(ptr->vecEndPos, 1.0);
+					UTIL_Sparks(ptr->vecEndPos);
 					flDamage = 0.01;
 				}
 			}
@@ -1415,21 +1418,44 @@ void CHevBarney::Precache()
 
 void CHevBarney::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType)
 {
-	if (ptr->iHitgroup != HITGROUP_HEAD && ptr->iHitgroup != HITGROUP_STOMACH)
+	switch (ptr->iHitgroup)
 	{
+	case HITGROUP_HEAD:
+		flDamage *= gSkillData.monHead;
+		break;
+
+	case HITGROUP_STOMACH:
+		flDamage *= 0.6;
+		break;
+
+	case 10:
+		if (m_HEVBarneyHelm == HEVBarneyHelm::Helm)
+		{
+			if (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB))
+			{
+
+				flDamage -= 20;
+				if (flDamage <= 0)
+				{
+					UTIL_Ricochet(ptr->vecEndPos, 1.0);
+					UTIL_Sparks(ptr->vecEndPos);
+					flDamage *= 0.01;
+				}
+			}
+		}
+		else break;
+	default:
 		if (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB))
 		{
-
 			flDamage -= 20;
 			if (flDamage <= 0)
 			{
 				UTIL_Ricochet(ptr->vecEndPos, 1.0);
+				UTIL_Sparks(ptr->vecEndPos);
 				flDamage *= 0.01;
 			}
-
 		}
-		if (ptr->iHitgroup == HITGROUP_STOMACH)
-			flDamage *= 0.6;
+		break;
 	}
 
 	CTalkMonster::TraceAttack(pevAttacker, flDamage, vecDir, ptr, bitsDamageType);
