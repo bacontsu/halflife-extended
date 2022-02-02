@@ -52,11 +52,16 @@ IMPLEMENT_SAVERESTORE( CTalkMonster, CBaseMonster );
 // array of friend names
 const char *CTalkMonster::m_szFriends[TLK_CFRIENDS] = 
 {
+	"monster_scientist",
+	"monster_scientist_hev",
+	"monster_sitting_scientist",
 	"monster_barney",
 	"monster_barney_hev",
-	"monster_barney_injured",
-	"monster_scientist",
-	"monster_sitting_scientist",
+	"monster_scientist_female",
+	"monster_janitor",
+	"monster_worker",
+	"monster_construction",
+	"monster_chef",
 };
 
 
