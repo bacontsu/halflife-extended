@@ -2719,7 +2719,6 @@ float NPC_Step(CBaseMonster* pMonster)
 		chTextureType = TEXTURETYPE_Find((char*)pTextureName);
 	}
 
-<<<<<<< HEAD
 	switch (pMonster->m_Activity)
 	{
 	case ACT_WALK:
@@ -2732,10 +2731,8 @@ float NPC_Step(CBaseMonster* pMonster)
 		fvol = 0.5;
 		break;
 	}
-=======
 
 	fvol = RANDOM_FLOAT(0.2, 0.5);
->>>>>>> 9a06fcf... made dynsteps quiter
 
 	switch (chTextureType)
 	{
