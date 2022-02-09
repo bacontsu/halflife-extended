@@ -982,7 +982,11 @@ void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 		edict_t* pentIgnore;
 		pentIgnore = ENT(pActivator->pev);
 
-		if (length >= width)// Pick the longest side as offset
+		// player location
+		float distanceX = abs(realOrigin.x - pActivator->pev->origin.x);
+		float distanceY = abs(realOrigin.y - pActivator->pev->origin.y);
+
+		if (distanceY < distanceX)// Pick the longest side as offset
 		{
 			UTIL_TraceLine(vecSrc, vecSrc + gpGlobals->v_forward * 2 * length, dont_ignore_monsters, pentIgnore, &tr);
 			CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
