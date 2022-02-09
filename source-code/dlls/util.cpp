@@ -19,6 +19,7 @@
   Utility code.  Really not optional after all.
 
 */
+
 #include <filesystem>
 #include "extdll.h"
 #include "util.h"
@@ -1165,6 +1166,9 @@ int UTIL_PointContents(	const Vector &vec )
 void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount )
 {
 	if ( !UTIL_ShouldShowBlood( color ) )
+		return;
+
+	if (color == DONT_BLEED || amount < 1)
 		return;
 
 	if ( g_Language == LANGUAGE_GERMAN && color == BLOOD_COLOR_RED )
@@ -2625,6 +2629,5 @@ int PRECACHE_MODEL(const char* s)
 		else
 			return g_engfuncs.pfnPrecacheModel("models/error.mdl");
 	}
-	else
-		return model = g_engfuncs.pfnPrecacheModel((char*)s);
+	else return model = g_engfuncs.pfnPrecacheModel((char*)s);
 }

@@ -13,11 +13,8 @@
 *
 ****/
 /*
-
 ===== combat.cpp ========================================================
-
   functions dealing with damage infliction & death
-
 */
 
 #include "extdll.h"
@@ -753,22 +750,26 @@ void CGib::BounceGibTouch(CBaseEntity* pOther)
 	Vector	vecSpot;
 	TraceResult	tr;
 
-	switch (RANDOM_LONG(0, 6))
+	if (m_bloodColor != DONT_BLEED)
 	{
-	case 0:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh1.wav", 0.55, ATTN_NORM);	break;
+		switch (RANDOM_LONG(0, 6))
+		{
+		case 0:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh1.wav", 0.55, ATTN_NORM);	break;
 
-	case 1:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh2.wav", 0.55, ATTN_NORM);	break;
+		case 1:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh2.wav", 0.55, ATTN_NORM);	break;
 
-	case 2:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh3.wav", 0.55, ATTN_NORM);	break;
+		case 2:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh3.wav", 0.55, ATTN_NORM);	break;
 
-	case 3:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh4.wav", 0.55, ATTN_NORM);	break;
+		case 3:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh4.wav", 0.55, ATTN_NORM);	break;
 
-	case 4:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh5.wav", 0.55, ATTN_NORM);	break;
+		case 4:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh5.wav", 0.55, ATTN_NORM);	break;
 
-	case 5:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh6.wav", 0.55, ATTN_NORM);	break;
+		case 5:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh6.wav", 0.55, ATTN_NORM);	break;
 
-	case 6:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh7.wav", 0.55, ATTN_NORM);	break;
+		case 6:	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "debris/flesh7.wav", 0.55, ATTN_NORM);	break;
+		}
 	}
+	
 	
 
 	if (pev->flags & FL_ONGROUND)	
@@ -796,16 +797,16 @@ void CGib::BounceGibTouch(CBaseEntity* pOther)
 			
 			UTIL_BloodDecalTrace(&tr, m_bloodColor);
 			
-			UTIL_BloodDrips(vecSpot, vecSpot, m_bloodColor, 5);
+			UTIL_BloodDrips(vecSpot, vecSpot, m_bloodColor, 10);
 			
 			
 			if (m_bloodColor == BLOOD_COLOR_RED)
 			{
-				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), 71, RANDOM_LONG(100, 250));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), 71, RANDOM_LONG(100, 300));
 			}
 			else
 			{
-				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), m_bloodColor, RANDOM_LONG(100, 250));
+				UTIL_BloodStream(vecSpot, UTIL_RandomBloodVector(), m_bloodColor, RANDOM_LONG(100, 300));
 			}
 
 			m_cBloodDecals--;
@@ -907,16 +908,11 @@ int CBaseMonster::TakeHealth(float flHealth, int bitsDamageType)
 /*
 ============
 TakeDamage
-
 The damage is coming from inflictor, but get mad at attacker
 This should be the only function that ever reduces health.
 bitsDamageType indicates the type of damage sustained, ie: DMG_SHOCK
-
 Time-based damage: only occurs while the monster is within the trigger_hurt.
 When a monster is poisoned via an arrow etc it takes all the poison damage at once.
-
-
-
 GLOBALS ASSUMED SET:  g_iSkillLevel
 ============
 */
@@ -1387,16 +1383,11 @@ void CBaseEntity::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vec
 void CBaseMonster::TraceAttack(entvars_t *pevAttacker, float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType)
 {
 	Vector vecOrigin = ptr->vecEndPos - vecDir * 4;
-
 	ALERT ( at_console, "%d\n", ptr->iHitgroup );
-
-
 	if ( pev->takedamage )
 	{
 		AddMultiDamage( pevAttacker, this, flDamage, bitsDamageType );
-
 		int blood = BloodColor();
-
 		if ( blood != DONT_BLEED )
 		{
 			SpawnBlood(vecOrigin, blood, flDamage);// a little surface blood.
@@ -1440,6 +1431,9 @@ void CBaseMonster::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector ve
 		}
 
 		SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage);// a little surface blood.
+		if (m_bloodColor == BLOOD_COLOR_RED)
+			UTIL_BloodStream(ptr->vecEndPos, UTIL_RandomBloodVector(), 71, RANDOM_LONG(2, 4) * flDamage);
+		else UTIL_BloodStream(ptr->vecEndPos, UTIL_RandomBloodVector(), m_bloodColor, RANDOM_LONG(2, 4) * flDamage);
 		TraceBleed(flDamage, vecDir, ptr, bitsDamageType);
 		AddMultiDamage(pevAttacker, this, flDamage, bitsDamageType);
 	}
@@ -1560,9 +1554,7 @@ void ImpactBullet(TraceResult* ptr, Vector vecSrc, Vector vecEnd)
 /*
 ================
 FireBullets
-
 Go to the trouble of combining multiple pellets into a single damage call.
-
 This version is used by Monsters.
 ================
 */
@@ -1805,9 +1797,7 @@ void CBaseEntity::FireBulletsWater(Vector vecSrc, Vector vecEnd)
 /*
 ================
 FireBullets
-
 Go to the trouble of combining multiple pellets into a single damage call.
-
 This version is used by Players, uses the random seed generator to sync client and server side shots.
 ================
 */
@@ -1953,7 +1943,7 @@ void CBaseEntity::TraceBleed(float flDamage, Vector vecDir, TraceResult* ptr, in
 	if (BloodColor() == DONT_BLEED)
 		return;
 
-	if (flDamage == 0)
+	if (flDamage < 1)
 		return;
 
 	if (!(bitsDamageType & (DMG_CRUSH | DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB | DMG_MORTAR)))
@@ -2054,7 +2044,6 @@ void CBaseMonster::MakeDamageBloodDecal(int cCount, float flNoise, TraceResult* 
 					WRITE_COORD( ptr->vecEndPos.x );
 					WRITE_COORD( ptr->vecEndPos.y );
 					WRITE_COORD( ptr->vecEndPos.z );
-
 					WRITE_COORD( Bloodtr.vecEndPos.x );
 					WRITE_COORD( Bloodtr.vecEndPos.y );
 					WRITE_COORD( Bloodtr.vecEndPos.z );
