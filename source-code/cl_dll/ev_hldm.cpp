@@ -251,7 +251,7 @@ void EV_HLDM_MuzzleFlash(Vector pos, float amount, int iR = 255, int iG = 255, i
 	dl->color.g = iG; // green
 	dl->color.b = iB; // blue
 	dl->radius = amount * 100;
-	dl->die = gEngfuncs.GetClientTime() + 0.01;
+	dl->die = gEngfuncs.GetClientTime() + 0.15;
 }
 
 
