@@ -38,13 +38,17 @@
 // first flag is otis dying for scripted sequences?
 #define		OTIS_AE_DRAW		( 2 )
 #define		OTIS_AE_SHOOT		( 3 )
-#define		OTIS_AE_HOLSTER	( 4 )
+#define		OTIS_AE_HOLSTER		( 4 )
+#define		OTIS_AE_RELOAD		( 5 )
+#define		OTIS_AE_MELEE		( 10 )
 
 #define OTIS_GLOCK		5// it's 5 so gearbox Otises will remain with their Deagles (which used to be 0) 
 #define OTIS_357		1
 #define OTIS_DEAGLE 	2
 #define OTIS_NOGUN		3
 #define OTIS_DONUT		4
+#define OTIS_MP5		6
+#define OTIS_SHOTGUN	7
 
 #define SF_DONTDROPGUN (1024)
 
@@ -64,14 +68,19 @@ namespace OtisWeapon
 {
 enum OtisWeapon
 {
+
 	Random = -1,
-	Glock = 0,
+	Glock_holstered = 0,
 	Glock_drawn,
-	Python,
+	Python_holstered,
 	Python_drawn,
-	Deagle,
+	Deagle_holstered,
 	Deagle_drawn,
 	Donut,
+	MP5_holstered,
+	MP5_drawn,
+	Shotgun_holstered,
+	Shotgun_drawn,
 	None
 };
 }
@@ -99,6 +108,7 @@ enum OtisHelm
 	Random = -1,
 	No_Helmet = 0,
 	Helmet,
+	Helmet_glass,
 	Cap,
 	Beret,
 };
@@ -134,12 +144,18 @@ public:
 	void Precache() override;
 	void SetYawSpeed() override;
 	int  ISoundMask() override;
+
 	void OtisFireDeagle();
 	void OtisFireGlock();
 	void OtisFire357();
+	void OtisFireShotgun();
+	void OtisFireMP5();
+
 	void AlertSound() override;
 	int  Classify () override;
 	void HandleAnimEvent( MonsterEvent_t *pEvent ) override;
+
+	void SetActivity(Activity NewActivity);
 	
 	void RunTask( Task_t *pTask ) override;
 	void StartTask( Task_t *pTask ) override;
@@ -181,6 +197,8 @@ public:
 	int m_iOtisVest;
 	int m_iOtisGlasses;
 
+	int m_iClipSize;
+
 	// UNDONE: What is this for?  It isn't used?
 	float	m_flPlayerDamage;// how much pain has the player inflicted on me?
 
@@ -196,10 +214,6 @@ TYPEDESCRIPTION	COtis::m_SaveData[] =
 	DEFINE_FIELD( COtis, m_checkAttackTime, FIELD_TIME ),
 	DEFINE_FIELD( COtis, m_lastAttackCheck, FIELD_BOOLEAN ),
 	DEFINE_FIELD( COtis, m_flPlayerDamage, FIELD_FLOAT ),
-	//DEFINE_FIELD( COtis, m_iOtisGun, FIELD_INTEGER ),
-	//DEFINE_FIELD( COtis, m_iOtisHead, FIELD_INTEGER ),
-	//DEFINE_FIELD(COtis, m_iOtisVest, FIELD_INTEGER),
-	//DEFINE_FIELD(COtis, m_iOtisArms, FIELD_INTEGER),
 };
 
 IMPLEMENT_SAVERESTORE( COtis, CTalkMonster );
@@ -207,6 +221,15 @@ IMPLEMENT_SAVERESTORE( COtis, CTalkMonster );
 //=========================================================
 // AI Schedules Specific to this monster
 //=========================================================
+
+//=========================================================
+// Monster-specific Schedule Types
+//=========================================================
+enum
+{
+	SCHED_OTIS_DISARM = LAST_TALKMONSTER_SCHEDULE + 1,
+};
+
 Task_t	tlOtFollow[] =
 {
 	{ TASK_MOVE_TO_TARGET_RANGE,(float)128		},	// Move within 128 of target ent (client)
@@ -307,12 +330,39 @@ Schedule_t	slIdleOtStand[] =
 	},
 };
 
+Task_t	tlOtisDisarm[] =
+{
+	{ TASK_STOP_MOVING,					0				},
+	{ TASK_PLAY_SEQUENCE,	(float)ACT_DISARM },
+};
+
+Schedule_t slOtisDisarm[] =
+{
+	{
+		tlOtisDisarm,
+		ARRAYSIZE(tlOtisDisarm),
+		bits_COND_NEW_ENEMY |
+		bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE |
+		bits_COND_HEAR_SOUND |
+		bits_COND_PROVOKED,
+
+		bits_SOUND_COMBAT |// sound flags - change these, and you'll break the talking code.
+		//bits_SOUND_PLAYER		|
+		//bits_SOUND_WORLD		|
+
+		bits_SOUND_DANGER,
+		"Otis Disarm"
+	}
+};
+
 DEFINE_CUSTOM_SCHEDULES( COtis )
 {
 	slOtFollow,
 	slOtisEnemyDraw,
 	slOtFaceTarget,
 	slIdleOtStand,
+	slOtisDisarm,
 };
 
 
@@ -529,6 +579,71 @@ void COtis::OtisFire357()
 	// UNDONE: Reload?
 	m_cAmmoLoaded--;// take away a bullet!
 }
+
+void COtis::OtisFireShotgun()
+{
+	Vector vecShootOrigin;
+
+	UTIL_MakeVectors(pev->angles);
+	vecShootOrigin = pev->origin + Vector(0, 0, 55);
+	Vector vecShootDir = ShootAtEnemy(vecShootOrigin);
+
+	Vector angDir = UTIL_VecToAngles(vecShootDir);
+	SetBlending(0, angDir.x);
+	pev->effects = EF_MUZZLEFLASH;
+
+	Vector	vecShellVelocity = gpGlobals->v_right * RANDOM_FLOAT(40, 90) + gpGlobals->v_up * RANDOM_FLOAT(75, 200) + gpGlobals->v_forward * RANDOM_FLOAT(-40, 40);
+	FireBullets(6, vecShootOrigin, vecShootDir, VECTOR_CONE_15DEGREES, 2048, BULLET_PLAYER_BUCKSHOT, 1); // shoot +-7.5 degrees
+
+	int pitchShift = RANDOM_LONG(0, 20);
+
+	// Only shift about half the time
+	if (pitchShift > 10)
+		pitchShift = 0;
+	else
+		pitchShift -= 5;
+	EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/sbarrel1.wav", 1, ATTN_NORM, 0, 100 + pitchShift);
+
+	CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
+
+	m_cAmmoLoaded--;// take away a bullet!
+
+}
+
+void COtis::OtisFireMP5()
+{
+	Vector vecShootOrigin;
+
+	UTIL_MakeVectors(pev->angles);
+	vecShootOrigin = pev->origin + Vector(0, 0, 55);
+	Vector vecShootDir = ShootAtEnemy(vecShootOrigin);
+
+	Vector angDir = UTIL_VecToAngles(vecShootDir);
+	SetBlending(0, angDir.x);
+	pev->effects = EF_MUZZLEFLASH;
+
+	Vector	vecShellVelocity = gpGlobals->v_right * RANDOM_FLOAT(40, 90) + gpGlobals->v_up * RANDOM_FLOAT(75, 200) + gpGlobals->v_forward * RANDOM_FLOAT(-40, 40);
+	FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_10DEGREES, 2048, BULLET_MONSTER_MP5, 1); // shoot +-5 degrees
+
+	int pitchShift = RANDOM_LONG(0, 20);
+
+	// Only shift about half the time
+	if (pitchShift > 10)
+		pitchShift = 0;
+	else
+		pitchShift -= 5;
+
+	switch (RANDOM_LONG(0, 2))
+	{
+	case 0: EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/hks1.wav", 1, ATTN_NORM, 0, 100 + pitchShift); break;
+	case 1: EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/hks2.wav", 1, ATTN_NORM, 0, 100 + pitchShift); break;
+	case 2: EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "weapons/hks3.wav", 1, ATTN_NORM, 0, 100 + pitchShift); break;
+	}
+
+	CSoundEnt::InsertSound(bits_SOUND_COMBAT, pev->origin, 384, 0.3);
+
+	m_cAmmoLoaded--;// take away a bullet!
+}
 		
 //=========================================================
 // HandleAnimEvent - catches the monster-specific messages
@@ -538,73 +653,116 @@ void COtis::OtisFire357()
 //=========================================================
 void COtis :: HandleAnimEvent( MonsterEvent_t *pEvent )
 {
-	switch( pEvent->event )
+	switch (pEvent->event)
 	{
 	case OTIS_AE_SHOOT:
-		if (pev->weapons == OTIS_DEAGLE)
+	{
+
+		switch (pev->weapons)
 		{
-			OtisFireDeagle();
-		}
-		if (pev->weapons == OTIS_357)
-		{
-			OtisFire357();
-		}
-		if (pev->weapons == OTIS_GLOCK)
-		{
+		case OTIS_GLOCK:
 			OtisFireGlock();
+			break;
+		case OTIS_357:
+			OtisFire357();
+			break;
+		case OTIS_DEAGLE:
+			OtisFireDeagle();
+			break;
+		case OTIS_SHOTGUN:
+			OtisFireShotgun();
+			break;
+		case OTIS_MP5:
+			OtisFireMP5();
+			break;
 		}
-		break;
+
+	}
+	break;
 
 	case OTIS_AE_DRAW:
-		// otis's bodygroup switches here so he can pull gun from holster
-		if( GetBodygroup( OtisBodyGroup::Gun ) != OtisWeapon::Deagle_drawn && GetBodygroup(OtisBodyGroup::Gun) != OtisWeapon::Python_drawn && GetBodygroup(OtisBodyGroup::Gun) != OtisWeapon::Glock_drawn)
+	{
+		// barney's bodygroup switches here so he can pull gun from holster
+		switch (pev->weapons)
 		{
-			if (pev->weapons == OTIS_DEAGLE)
-			{
-				SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Deagle_drawn);
-				m_iOtisGun = OtisWeapon::Deagle_drawn;
-				m_fGunDrawn = true;
-			}
-			if (pev->weapons == OTIS_357)
-			{
-				SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Python_drawn);
-				m_iOtisGun = OtisWeapon::Python_drawn;
-				m_fGunDrawn = true;
-			}
-			if (pev->weapons == OTIS_GLOCK)
-			{
-				SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Glock_drawn);
-				m_iOtisGun = OtisWeapon::Glock_drawn;
-				m_fGunDrawn = true;
-			}
+		case OTIS_GLOCK:
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Glock_drawn);
+			m_iOtisGun = OtisWeapon::Glock_drawn;
+			break;
+		case OTIS_357:
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Python_drawn);
+			m_iOtisGun = OtisWeapon::Python_drawn;
+			break;
+		case OTIS_DEAGLE:
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Deagle_drawn);
+			m_iOtisGun = OtisWeapon::Deagle_drawn;
+			break;
+		case OTIS_SHOTGUN:
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Shotgun_drawn);
+			m_iOtisGun = OtisWeapon::Shotgun_drawn;
+			break;
+		case OTIS_MP5:
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::MP5_drawn);
+			m_iOtisGun = OtisWeapon::MP5_drawn;
+			break;
 		}
-
-		break;
+		m_fGunDrawn = TRUE;
+	}
+	break;
 
 	case OTIS_AE_HOLSTER:
+	{
 		// change bodygroup to replace gun in holster
-		if (pev->weapons == OTIS_DEAGLE)
+		switch (pev->weapons)
 		{
-			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Deagle);
-			m_iOtisGun = OtisWeapon::Deagle;
-			m_fGunDrawn = false;
+		case OTIS_GLOCK:
+
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Glock_holstered);
+			m_iOtisGun = OtisWeapon::Glock_holstered;
+			break;
+		case OTIS_357:
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Python_holstered);
+			m_iOtisGun = OtisWeapon::Python_holstered;
+			break;
+		case OTIS_DEAGLE:
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Deagle_holstered);
+			m_iOtisGun = OtisWeapon::Deagle_holstered;
+			break;
+		case OTIS_SHOTGUN:
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Shotgun_holstered);
+			m_iOtisGun = OtisWeapon::Shotgun_holstered;
+			break;
+		case OTIS_MP5:
+			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::MP5_holstered);
+			m_iOtisGun = OtisWeapon::MP5_holstered;
+			break;
 		}
-		if (pev->weapons == OTIS_357)
+		m_fGunDrawn = FALSE;
+	}
+	break;
+
+	case OTIS_AE_RELOAD:
+	{
+		EMIT_SOUND(ENT(pev), CHAN_WEAPON, "barney/ba_reload1.wav", 1, ATTN_NORM);
+	}
+	case OTIS_AE_MELEE:
+	{
+		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.zombieDmgOneSlash, DMG_SLASH);
+		if (pHurt)
 		{
-			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Python);
-			m_iOtisGun = OtisWeapon::Python;
-			m_fGunDrawn = false;
+			if (pHurt->pev->flags & (FL_MONSTER | FL_CLIENT))
+			{
+				pHurt->pev->punchangle.z = -18;
+				pHurt->pev->punchangle.x = 5;
+				pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
+			}
 		}
-		if (pev->weapons == OTIS_GLOCK)
-		{
-			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Glock);
-			m_iOtisGun = OtisWeapon::Glock;
-			m_fGunDrawn = false;
-		}
-		break;
+	}
+	break;
+
 
 	default:
-		CTalkMonster::HandleAnimEvent( pEvent );
+		CTalkMonster::HandleAnimEvent(pEvent);
 	}
 }
 
@@ -626,21 +784,19 @@ void COtis :: Spawn()
 	m_flFieldOfView		= VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so npc will notice player and say hello
 	m_MonsterState		= MONSTERSTATE_NONE;
 
-	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP;
+	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP | bits_CAP_MELEE_ATTACK1;
 
 	//Note: This originally didn't use SetBodygroup
 	if( m_iOtisHead == OtisHelm::Random )// pick random helmet
-	{
-		m_iOtisHead = RANDOM_LONG( 0, 3 );
-	}
-	if (m_iOtisGlasses == OtisGlasses::Random)// pick random helmet
-	{
+		m_iOtisHead = RANDOM_LONG( 0, 4 );
+
+	if (m_iOtisGlasses == OtisGlasses::Random)// pick random glasses
 		m_iOtisGlasses = RANDOM_LONG(0, 2);
-	}
+
 	if( m_iOtisGun == OtisWeapon::Random )// pick random gun
-	{
 		pev->weapons = RANDOM_LONG(1, 5);
-	}
+
+
 	if (m_iOtisArms == OtisArms::Random)// pick random sleeves
 	{
 		if (m_iOtisVest != OtisVest::Random)
@@ -661,10 +817,9 @@ void COtis :: Spawn()
 		}
 		else m_iOtisVest = RANDOM_LONG(0, 3) + 4;//else dark shirt
 	}
+
 	if (pev->skin == -1)
-	{
 		pev->skin = RANDOM_LONG(0, 7);
-	}
 
 
 	SetBodygroup( OtisBodyGroup::Gun, m_iOtisGun );
@@ -673,35 +828,49 @@ void COtis :: Spawn()
 	SetBodygroup(OtisBodyGroup::Arms, m_iOtisArms);
 	SetBodygroup(OtisBodyGroup::Vest, m_iOtisVest);
 
-	if (pev->weapons == 0)
+	// initialise weapons
+	switch (pev->weapons)
 	{
-		pev->weapons = RANDOM_LONG(1, 2);
-	}
-	if (pev->weapons == OTIS_DEAGLE)
-	{
-		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Deagle);
-		m_iOtisGun = OtisWeapon::Deagle;
+	case OTIS_357:
+		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Python_holstered);
+		m_iOtisGun = OtisWeapon::Python_holstered;
 		m_fGunDrawn = false;
-	}
-	if (pev->weapons == OTIS_357)
-	{
-		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Python);
-		m_iOtisGun = OtisWeapon::Python;
+		m_iClipSize = 6;
+		break;
+	case OTIS_DEAGLE:
+		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Deagle_holstered);
+		m_iOtisGun = OtisWeapon::Deagle_holstered;
 		m_fGunDrawn = false;
-	}
-	if (pev->weapons == OTIS_GLOCK)
-	{
-		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Glock);
-		m_iOtisGun = OtisWeapon::Glock;
+		m_iClipSize = 8;
+		break;
+	case OTIS_SHOTGUN:
+		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Shotgun_holstered);
+		m_iOtisGun = OtisWeapon::Shotgun_holstered;
 		m_fGunDrawn = false;
-	}
-	if (pev->weapons == OTIS_DONUT)
-	{
-		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Donut);
-		m_iOtisGun = OtisWeapon::Donut;
-		m_fGunDrawn = true;
+		m_iClipSize = 8;
+		break;
+	case OTIS_MP5:
+		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::MP5_holstered);
+		m_iOtisGun = OtisWeapon::MP5_holstered;
+		m_fGunDrawn = false;
+		m_iClipSize = 30;
+		break;
+	case OTIS_NOGUN:
+		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::None);
+		m_iOtisGun = OtisWeapon::None;
+		m_fGunDrawn = false;
+		break;
+	default:
+		pev->weapons = OTIS_GLOCK;
+		SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::Glock_holstered);
+		m_iOtisGun = OtisWeapon::Glock_holstered;
+		m_fGunDrawn = false;
+		m_iClipSize = 17;
+		break;
 	}
 	
+	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_DOORS_GROUP;
+	m_cAmmoLoaded = m_iClipSize;
 
 	MonsterInit();
 	SetUse( &COtis::FollowerUse );
@@ -726,11 +895,6 @@ void COtis :: Precache()
 	PRECACHE_SOUND("barney/ba_die1.wav");
 	PRECACHE_SOUND("barney/ba_die2.wav");
 	PRECACHE_SOUND("barney/ba_die3.wav");
-
-	PRECACHE_SOUND("common/boots1.wav");
-	PRECACHE_SOUND("common/boots3.wav");
-	PRECACHE_SOUND("common/boots2.wav");
-	PRECACHE_SOUND("common/boots4.wav");
 	
 	// every new otis must call this, otherwise
 	// when a level is loaded, nobody will talk (time is reset to 0)
@@ -862,9 +1026,8 @@ void COtis::TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir, 
 			break;
 		}
 		
-		//TODO: Otis doesn't have a helmet, probably don't want his dome being bulletproof
 	case 10:
-		if (GetBodygroup(OtisBodyGroup::Helmet) == OtisHelm::Helmet)
+		if (m_iOtisHead == OtisHelm::Helmet || m_iOtisHead == OtisHelm::Helmet_glass)
 		{
 			if (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_CLUB))
 			{
@@ -876,7 +1039,6 @@ void COtis::TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir, 
 				}
 			}
 		}
-		else flDamage *= 2;
 		// always a head shot
 		ptr->iHitgroup = HITGROUP_HEAD;
 		break;
@@ -899,24 +1061,38 @@ void COtis::Killed( entvars_t *pevAttacker, int iGib )
 		}
 		else
 		{
-			SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::None);
-			m_iOtisGun = OtisWeapon::None;
+			if (GetBodygroup(OtisBodyGroup::Gun) != OtisWeapon::None)
+			{
+				Vector vecGunPos;
+				Vector vecGunAngles;
 
-			GetAttachment(0, vecGunPos, vecGunAngles);
+				SetBodygroup(OtisBodyGroup::Gun, OtisWeapon::None);
+				m_iOtisGun = OtisWeapon::None;
 
-			if (pev->weapons == OTIS_GLOCK)
-			{
-				CBaseEntity* pGun = DropItem("weapon_9mmhandgun", vecGunPos, vecGunAngles);
+				GetAttachment(0, vecGunPos, vecGunAngles);
+
+				if (pev->weapons == OTIS_GLOCK)
+				{
+					CBaseEntity* pGun = DropItem("weapon_9mmhandgun", vecGunPos, vecGunAngles);
+				}
+				if (pev->weapons == OTIS_357)
+				{
+					CBaseEntity* pGun = DropItem("weapon_357", vecGunPos, vecGunAngles);
+				}
+				if (pev->weapons == OTIS_DEAGLE)
+				{
+					CBaseEntity* pGun = DropItem("weapon_eagle", vecGunPos, vecGunAngles);
+				}
+				if (pev->weapons == OTIS_MP5)
+				{
+					CBaseEntity* pGun = DropItem("weapon_9mmAR", vecGunPos, vecGunAngles);
+				}
+				if (pev->weapons == OTIS_SHOTGUN)
+				{
+					CBaseEntity* pGun = DropItem("weapon_shotgun", vecGunPos, vecGunAngles);
+				}
+				pev->weapons = OTIS_NOGUN;
 			}
-			if (pev->weapons == OTIS_357)
-			{
-				CBaseEntity* pGun = DropItem("weapon_357", vecGunPos, vecGunAngles);
-			}
-			if (pev->weapons == OTIS_DEAGLE)
-			{
-				CBaseEntity* pGun = DropItem("weapon_eagle", vecGunPos, vecGunAngles);
-			}
-			pev->weapons = OTIS_NOGUN;
 		}
 		
 		
@@ -957,6 +1133,9 @@ Schedule_t* COtis :: GetScheduleOfType ( int Type )
 
 	case SCHED_TARGET_CHASE:
 		return slOtFollow;
+
+	case SCHED_OTIS_DISARM:
+		return slOtisDisarm;
 
 	case SCHED_IDLE_STAND:
 		// call base class default so that scientist will talk
@@ -1018,11 +1197,23 @@ Schedule_t *COtis :: GetSchedule ()
 
 			if ( HasConditions( bits_COND_HEAVY_DAMAGE ) )
 				return GetScheduleOfType( SCHED_TAKE_COVER_FROM_ENEMY );
+
+			if (m_cAmmoLoaded <= 0)
+			{
+				m_cAmmoLoaded = m_iClipSize;
+				return GetScheduleOfType(SCHED_RELOAD);
+			}
 		}
 		break;
 
 	case MONSTERSTATE_ALERT:	
 	case MONSTERSTATE_IDLE:
+
+		if (m_fGunDrawn == TRUE)// if we're no longer fighting then holster the gun
+		{
+			return GetScheduleOfType(SCHED_OTIS_DISARM);
+		}
+
 		if ( HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE))
 		{
 			// flinch if hurt
@@ -1058,6 +1249,130 @@ Schedule_t *COtis :: GetSchedule ()
 	}
 	
 	return CTalkMonster::GetSchedule();
+}
+
+//=========================================================
+// SetActivity 
+//=========================================================
+void COtis::SetActivity(Activity NewActivity)
+{
+	int	iSequence = -1;
+	void* pmodel = GET_MODEL_PTR(ENT(pev));
+
+	switch (NewActivity)
+	{
+	case ACT_RANGE_ATTACK1:
+	{
+		switch (pev->weapons)
+		{
+		case OTIS_GLOCK:
+			iSequence = LookupSequence("shootgun");
+			break;
+		case OTIS_357:
+		case OTIS_DEAGLE:
+			iSequence = LookupSequence("shoot357");
+			break;
+		case OTIS_SHOTGUN:
+			iSequence = LookupSequence("shootsgun");
+			break;
+		case OTIS_MP5:
+			iSequence = LookupSequence("shootmp5");
+			break;
+		}
+	}
+	break;
+	case ACT_ARM:
+	{
+		if (pev->weapons == OTIS_SHOTGUN || pev->weapons == OTIS_MP5)
+		{
+			iSequence = LookupSequence("draw_mp5");
+		}
+		else iSequence = LookupSequence("draw");
+	}
+	break;
+	case ACT_DISARM:
+	{
+		if (pev->weapons == OTIS_SHOTGUN || pev->weapons == OTIS_MP5)
+		{
+			iSequence = LookupSequence("disarm_mp5");
+		}
+		else iSequence = LookupSequence("disarm");
+	}
+	break;
+	case ACT_RELOAD:
+	{
+		switch (pev->weapons)
+		{
+		case OTIS_GLOCK:
+			iSequence = LookupSequence("reload");
+			break;
+		case OTIS_357:
+			iSequence = LookupSequence("reload_357");
+			break;
+		case OTIS_DEAGLE:
+			iSequence = LookupSequence("reload_deagle");
+			break;
+		case OTIS_SHOTGUN:
+			iSequence = LookupSequence("reload_shotgun");
+			break;
+		case OTIS_MP5:
+			iSequence = LookupSequence("reload_mp5");
+			break;
+		}
+	}
+	break;
+	case ACT_RUN:
+	{
+		if (pev->health <= gSkillData.barneyHealth * 0.25)
+		{
+			// limp!
+			iSequence = LookupSequence("limpingrun");
+		}
+
+		else
+		{
+			if ((pev->weapons == OTIS_SHOTGUN || pev->weapons == OTIS_MP5) && m_fGunDrawn == TRUE)
+			{
+				iSequence = LookupSequence("run_mp5");
+			}
+			else iSequence = LookupSequence("run");
+		}
+	}
+	break;
+	case ACT_WALK:
+	{
+		if (pev->health <= gSkillData.barneyHealth * 0.25)
+		{
+			// limp!
+			iSequence = LookupSequence("limpingwalk");
+		}
+
+		else
+		{
+			if ((pev->weapons == OTIS_SHOTGUN || pev->weapons == OTIS_MP5) && m_fGunDrawn == TRUE)
+			{
+				iSequence = LookupSequence("walk_mp5");
+			}
+			else iSequence = LookupSequence("walk");
+		}
+	}
+	break;
+	case ACT_IDLE:
+	{
+		if ((pev->weapons == OTIS_SHOTGUN || pev->weapons == OTIS_MP5) && m_fGunDrawn == TRUE)
+		{
+			iSequence = LookupActivity(ACT_IDLE_ANGRY);
+		}
+		iSequence = LookupActivity(NewActivity);
+	}
+	break;
+	default:
+		iSequence = LookupActivity(NewActivity);
+		break;
+	}
+
+	CTalkMonster::SetActivity(NewActivity);
+
 }
 
 MONSTERSTATE COtis :: GetIdealState ()

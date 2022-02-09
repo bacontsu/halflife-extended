@@ -1018,8 +1018,8 @@ void ClientPrecache()
 	PRECACHE_SOUND("debris/flesh6.wav");
 	PRECACHE_SOUND("debris/flesh7.wav");
 
-
 	PRECACHE_MODEL("sprites/debris/smokepuff.spr");
+<<<<<<< HEAD
 	
 	PRECACHE_MODEL("sprites/debris/debris_computer01.spr");
 	PRECACHE_MODEL("sprites/debris/debris_computer02.spr");
@@ -1044,6 +1044,8 @@ void ClientPrecache()
 	PRECACHE_MODEL("sprites/debris/debris_wood01.spr");
 	PRECACHE_MODEL("sprites/debris/debris_wood02.spr");
 	PRECACHE_MODEL("sprites/debris/debris_wood03.spr");
+=======
+>>>>>>> 1012d6f... added barney weapons, unloaded precache
 
 	if (giPrecacheGrunt)
 		UTIL_PrecacheOther("monster_human_grunt");
