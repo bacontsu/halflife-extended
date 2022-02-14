@@ -33,6 +33,10 @@
 
 #include "rain.h"
 
+#include "..\discord_sdk\include\discord_register.h"
+#include "..\discord_sdk\include\discord_rpc.h"
+#include "time.h"
+
 hud_player_info_t	 g_PlayerInfoList[MAX_PLAYERS + 1];	   // player info from the engine
 extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS + 1];   // additional player info sent directly to the client dll
 
@@ -379,7 +383,7 @@ int __MsgFunc_StatsPlayer(const char* pszName, int iSize, void* pbuf)
 // This is called every time the DLL is loaded
 void CHud::Init()
 {
-
+	DiscordInit();
 	InitRain();
 
 	HOOK_MESSAGE(Logo);
@@ -845,4 +849,30 @@ float CHud::GetSensitivity()
 void CHud::setNightVisionState(bool state)
 {
 	mNightVisionState = state;
+}
+
+void CHud::DiscordInit()
+{
+	DiscordEventHandlers handlers;
+	memset(&handlers, 0, sizeof(handlers));
+	Discord_Initialize("850360567561846845", &handlers, true, nullptr);
+}
+
+void CHud::DiscordShutdown()
+{
+	Discord_Shutdown(); //goodbye
+}
+
+void CHud::DiscordUpdate()
+{
+	DiscordRichPresence discordPresence;
+	memset(&discordPresence, 0, sizeof(discordPresence));
+	discordPresence.state = "   ";
+	discordPresence.details = "Playing in-game";
+	discordPresence.startTimestamp = time(0); //initlialize time
+	discordPresence.largeImageKey = "extended2"; //large image file name no extension
+	discordPresence.largeImageText = "Half-Life Extended";
+	discordPresence.smallImageKey = "   "; //same as large
+	discordPresence.smallImageText = "   "; //displays on hover
+	Discord_UpdatePresence(&discordPresence); //do the do
 }

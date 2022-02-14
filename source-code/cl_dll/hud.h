@@ -731,6 +731,8 @@ public:
 	int playerHealth;
 	bool isPaused;
 
+	float discordUpdate = 0.0f;
+
 
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b);
@@ -837,6 +839,10 @@ public:
 
 	void setNightVisionState(bool state);
 
+	void DiscordInit();
+	void DiscordShutdown();
+	void DiscordUpdate();
+
 	/*void getNightVisionHudItemColor( int& r, int& g, int& b )
 	{
 		r = 255;
@@ -853,4 +859,5 @@ extern int g_iTeamNumber;
 extern int g_iUser1;
 extern int g_iUser2;
 extern int g_iUser3;
+
 
