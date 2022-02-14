@@ -1453,7 +1453,11 @@ int CStudioModelRenderer::StudioDrawModel(int flags)
 			dl->color.r = 0;
 			dl->color.g = 91;
 			dl->color.b = 91;
-			dl->die = gHUD.m_flTimeDelta * 10 + gHUD.m_flTime;
+
+			if(gHUD.isPaused)
+				dl->die = 0;
+			else
+				dl->die = gHUD.m_flTimeDelta + 0.1f + gHUD.m_flTime;
 		}
 
 		// ============================FULLBRIGHTS============================
