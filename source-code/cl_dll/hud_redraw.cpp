@@ -245,7 +245,6 @@ int CHud :: Redraw( float flTime, int intermission )
 		DiscordUpdate();
 	}
 
-
 	return 1;
 }
 
