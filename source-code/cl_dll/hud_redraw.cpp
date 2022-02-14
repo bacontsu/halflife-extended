@@ -233,7 +233,10 @@ int CHud :: Redraw( float flTime, int intermission )
 	}
 	*/
 
-	if (discordUpdate < m_flTime)
+	if (discordUpdate > m_flTime + CVAR_GET_FLOAT("discord_rpc_updaterate"))
+		discordUpdate = m_flTime;
+
+	if (discordUpdate <= m_flTime)
 	{
 		DiscordUpdate();
 		discordUpdate = m_flTime + CVAR_GET_FLOAT("discord_rpc_updaterate");

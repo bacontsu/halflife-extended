@@ -453,7 +453,7 @@ void CHud::Init()
 	CVAR_CREATE("cl_hands", "1", FCVAR_ARCHIVE);// modular hand cvar check
 	CVAR_CREATE("cl_showplayer", "0", FCVAR_ARCHIVE);// clientside player model
 
-	CVAR_CREATE("discord_rpc_updaterate", "1", FCVAR_ARCHIVE);// discord rpc update rate in seconds
+	CVAR_CREATE("discord_rpc_updaterate", "5", FCVAR_ARCHIVE);// discord rpc update rate in seconds
 
 	m_iLogo = 0;
 	m_iFOV = 0;
