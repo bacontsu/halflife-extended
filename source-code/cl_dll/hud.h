@@ -731,7 +731,9 @@ public:
 	int playerHealth;
 	bool isPaused;
 
+	// discord rpc
 	float discordUpdate = 0.0f;
+	int runningTime;
 
 
 	int m_iFontHeight;

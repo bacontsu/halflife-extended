@@ -37,6 +37,7 @@
 #include "..\discord_sdk\include\discord_rpc.h"
 #include "time.h"
 
+
 hud_player_info_t	 g_PlayerInfoList[MAX_PLAYERS + 1];	   // player info from the engine
 extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS + 1];   // additional player info sent directly to the client dll
 
@@ -452,7 +453,7 @@ void CHud::Init()
 	CVAR_CREATE("cl_hands", "1", FCVAR_ARCHIVE);// modular hand cvar check
 	CVAR_CREATE("cl_showplayer", "0", FCVAR_ARCHIVE);// clientside player model
 
-	CVAR_CREATE("discord_rpc_updaterate", "5", FCVAR_ARCHIVE);// discord rpc update rate in seconds
+	CVAR_CREATE("discord_rpc_updaterate", "1", FCVAR_ARCHIVE);// discord rpc update rate in seconds
 
 	m_iLogo = 0;
 	m_iFOV = 0;
@@ -858,6 +859,10 @@ void CHud::DiscordInit()
 	DiscordEventHandlers handlers;
 	memset(&handlers, 0, sizeof(handlers));
 	Discord_Initialize("850360567561846845", &handlers, true, nullptr);
+	runningTime = time(0); //initialize time
+
+	// log
+	gEngfuncs.Con_Printf("Discord RPC has been Initialized!\n");
 }
 
 void CHud::DiscordShutdown()
@@ -869,9 +874,14 @@ void CHud::DiscordUpdate()
 {
 	DiscordRichPresence discordPresence;
 	memset(&discordPresence, 0, sizeof(discordPresence));
-	discordPresence.state = "   ";
-	discordPresence.details = "Playing in-game";
-	discordPresence.startTimestamp = time(0); //initlialize time
+
+	// char playingMsg[MAX_PATH] = "Map: ";
+	// const char* levelName = gEngfuncs.pfnGetLevelName();
+	// strcat(playingMsg, levelName);
+
+	discordPresence.startTimestamp = runningTime; // use recorded time
+	discordPresence.state = "Playing In-game";
+	discordPresence.details = gEngfuncs.pfnGetLevelName();
 	discordPresence.largeImageKey = "extended2"; //large image file name no extension
 	discordPresence.largeImageText = "Half-Life Extended";
 	discordPresence.smallImageKey = "   "; //same as large
