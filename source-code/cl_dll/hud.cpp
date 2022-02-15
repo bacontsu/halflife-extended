@@ -875,13 +875,14 @@ void CHud::DiscordUpdate()
 	DiscordRichPresence discordPresence;
 	memset(&discordPresence, 0, sizeof(discordPresence));
 
-	// char playingMsg[MAX_PATH] = "Map: ";
-	// const char* levelName = gEngfuncs.pfnGetLevelName();
-	// strcat(playingMsg, levelName);
+	// get level name
+	char playingMsg[MAX_PATH] = "Map: ";
+	const char* levelName = gEngfuncs.pfnGetLevelName();
+	strcat(playingMsg, levelName);
 
 	discordPresence.startTimestamp = runningTime; // use recorded time
 	discordPresence.state = "Playing In-game";
-	discordPresence.details = gEngfuncs.pfnGetLevelName();
+	discordPresence.details = playingMsg;
 	discordPresence.largeImageKey = "extended2"; //large image file name no extension
 	discordPresence.largeImageText = "Half-Life Extended";
 	discordPresence.smallImageKey = "   "; //same as large
