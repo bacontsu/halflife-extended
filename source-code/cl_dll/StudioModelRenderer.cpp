@@ -564,6 +564,19 @@ void CStudioModelRenderer::StudioSetUpTransform(int trivial_accept)
 	(*m_protationmatrix)[0][3] = modelpos[0];
 	(*m_protationmatrix)[1][3] = modelpos[1];
 	(*m_protationmatrix)[2][3] = modelpos[2];
+
+	//LRC - apply scale to models!
+	if (m_pCurrentEntity->curstate.scale != 0)
+	{
+		int j;
+		for (i = 0; i < 3; i++)
+			for (j = 0; j < 3; j++)
+			{
+				(*m_protationmatrix)[i][j] *= m_pCurrentEntity->curstate.scale;
+			}
+	}
+
+
 }
 
 
@@ -1440,7 +1453,11 @@ int CStudioModelRenderer::StudioDrawModel(int flags)
 			dl->color.r = 0;
 			dl->color.g = 91;
 			dl->color.b = 91;
-			dl->die = gHUD.m_flTimeDelta * 10 + gHUD.m_flTime;
+
+			if(gHUD.isPaused)
+				dl->die = 0;
+			else
+				dl->die = gHUD.m_flTimeDelta + 0.1f + gHUD.m_flTime;
 		}
 
 		// ============================FULLBRIGHTS============================
