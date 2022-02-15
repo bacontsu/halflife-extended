@@ -566,12 +566,15 @@ void CScientist :: StartTask( Task_t *pTask )
 				else
 				{
 					if (m_hEnemy->IsPlayer())
-						PlaySentence("SC_PLFEAR", 5, VOL_NORM, ATTN_NORM);
+					{
+						if (FClassnameIs(pev, "monster_scientist"))
+							PlaySentence("SC_PLFEAR", 5, VOL_NORM, ATTN_NORM);
+					}
 					else if (FClassnameIs(pev, "monster_janitor"))
 							PlaySentence("CL_COMBAT", 5, VOL_NORM, ATTN_NORM);
 					else if (FClassnameIs(pev, "monster_scientist_female"))
 						PlaySentence("FS_COMBAT", 5, VOL_NORM, ATTN_NORM);
-					else
+					else if(FClassnameIs(pev, "monster_scientist"))
 						PlaySentence("SC_FEAR", 5, VOL_NORM, ATTN_NORM);
 				}
 		}

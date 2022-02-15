@@ -87,8 +87,12 @@ public:
 
 	void IdleSound(void);
 	void DeathSound(void);
+	void AlertSound(void);
+	void PainSound(void);
 
 	static const char* pIdleSounds[];
+	static const char* pAlertSounds[];
+	static const char* pPainSounds[];
 
 	void SonFrappe(BOOL Touche);
 
@@ -109,6 +113,16 @@ const char* CDiablo::pIdleSounds[] =
 	"panthereye/pa_idle3.wav",
 	"panthereye/pa_idle4.wav",
 };
+const char* CDiablo::pAlertSounds[] =
+{
+	"panthereye/pa_alert1.wav",
+	"panthereye/pa_alert2.wav",
+};
+const char* CDiablo::pPainSounds[] =
+{
+	"panthereye/pa_pain1.wav",
+	"panthereye/pa_pain2.wav",
+};
 
 void CDiablo::IdleSound()
 {
@@ -116,6 +130,20 @@ void CDiablo::IdleSound()
 
 	// Play a random idle sound
 	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, pIdleSounds[RANDOM_LONG(0, ARRAYSIZE(pIdleSounds) - 1)], 1.0, ATTN_NORM, 0, pitch);
+}
+void CDiablo::AlertSound()
+{
+	int pitch = 100 + RANDOM_LONG(-5, 5);
+
+	// Play a random Alert sound
+	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, pAlertSounds[RANDOM_LONG(0, ARRAYSIZE(pAlertSounds) - 1)], 1.0, ATTN_NORM, 0, pitch);
+}
+void CDiablo::PainSound()
+{
+	int pitch = 100 + RANDOM_LONG(-5, 5);
+
+	// Play a random Pain sound
+	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, pPainSounds[RANDOM_LONG(0, ARRAYSIZE(pPainSounds) - 1)], 1.0, ATTN_NORM, 0, pitch);
 }
 void CDiablo::DeathSound()
 {
@@ -235,9 +263,9 @@ void CDiablo::Precache()
 	PRECACHE_SOUND("zombie/claw_strike2.wav");
 	PRECACHE_SOUND("zombie/claw_strike3.wav");
 
-	int i;
-	for (i = 0; i < ARRAYSIZE(pIdleSounds); i++)
-		PRECACHE_SOUND((char*)pIdleSounds[i]);
+	PRECACHE_SOUND_ARRAY(pAlertSounds);
+	PRECACHE_SOUND_ARRAY(pIdleSounds);
+	PRECACHE_SOUND_ARRAY(pPainSounds);
 
 
 }

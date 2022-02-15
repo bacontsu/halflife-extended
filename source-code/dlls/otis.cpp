@@ -1283,7 +1283,7 @@ void COtis::SetActivity(Activity NewActivity)
 	break;
 	case ACT_ARM:
 	{
-		if (pev->weapons == OTIS_SHOTGUN || pev->weapons == OTIS_MP5)
+		if (pev->weapons >= OTIS_MP5)
 		{
 			iSequence = LookupSequence("draw_mp5");
 		}
@@ -1292,7 +1292,7 @@ void COtis::SetActivity(Activity NewActivity)
 	break;
 	case ACT_DISARM:
 	{
-		if (pev->weapons == OTIS_SHOTGUN || pev->weapons == OTIS_MP5)
+		if (pev->weapons >= OTIS_MP5)
 		{
 			iSequence = LookupSequence("disarm_mp5");
 		}
@@ -1371,7 +1371,26 @@ void COtis::SetActivity(Activity NewActivity)
 		break;
 	}
 
-	CTalkMonster::SetActivity(NewActivity);
+	m_Activity = NewActivity; // Go ahead and set this so it doesn't keep trying when the anim is not present
+
+	// Set to the desired anim, or default anim if the desired is not present
+	if (iSequence > -1)
+	{
+		if (pev->sequence != iSequence || !m_fSequenceLoops)
+		{
+			pev->frame = 0;
+		}
+
+		pev->sequence = iSequence;	// Set to the reset anim (if it's there)
+		ResetSequenceInfo();
+		SetYawSpeed();
+	}
+	else
+	{
+		// Not available try to get default anim
+		//ALERT(at_console, "%s has no sequence for act:%d\n", STRING(pev->classname), NewActivity);
+		pev->sequence = 0;	// Set to the reset anim (if it's there)
+	}
 
 }
 
