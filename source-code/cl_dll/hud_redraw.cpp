@@ -233,12 +233,6 @@ int CHud :: Redraw( float flTime, int intermission )
 	}
 	*/
 
-	if (g_iUseEnt == 1)
-	{
-		HUD_MarkUseableEnt();
-		g_iUseEnt = 0;
-	}
-
 	if (discordUpdate < m_flTime)
 	{
 		discordUpdate += m_flTime + 5;
