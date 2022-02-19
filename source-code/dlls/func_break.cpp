@@ -1039,6 +1039,8 @@ void CPushable::Killed(entvars_t* pevAttacker, int iGib)
 		m_pPlayer->pev->maxspeed = 0;
 		m_pPlayer = nullptr;
 	}
+
+	CBreakable::Killed(pevAttacker, iGib);
 }
 
 
