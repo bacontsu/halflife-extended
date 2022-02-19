@@ -970,6 +970,13 @@ void CPushable :: KeyValue( KeyValueData *pkvd )
 // Pull the func_pushable
 void CPushable :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
+	if (!pActivator || !pActivator->IsPlayer())
+	{
+		if ((pev->spawnflags & SF_PUSH_BREAKABLE) != 0)
+			this->CBreakable::Use(pActivator, pCaller, useType, value);
+		return;
+	}
+
 	// experimental pull feature
 	if (pActivator->pev->flags & FL_ONGROUND && VARS(pActivator->pev->groundentity) != this->pev)
 	{
