@@ -3,6 +3,7 @@
 
 ![C++](https://img.shields.io/badge/C++-Solutions-blue.svg?style=flat&logo=c%2B%2B)
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/ellerbrock/open-source-badges/)
+[![Discord  - RPC](https://img.shields.io/badge/Discord_-RPC-3f3fa6?logo=discord&logoColor=ffffff)](https://github.com/discord/discord-rpc)
 
 # Half Life : Extended SDK
 Source Code of Half Life : Extended as a open source modbase for everyone publicly, make your own mod with alot of features easily based on this SDK. Equipped with modern features and tools to improve gameplay and development wise.
