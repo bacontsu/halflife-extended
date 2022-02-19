@@ -56,6 +56,18 @@ CElectrifiedWire::CElectrifiedWire()
 {
 }
 
+const char* CElectrifiedWire::pSparkSounds[]
+{
+	"debris/zap1.wav",
+	"debris/zap2.wav",
+	"debris/zap3.wav",
+	"debris/zap4.wav",
+	"debris/zap5.wav",
+	"debris/zap6.wav",
+	"debris/zap7.wav",
+	"debris/zap8.wav"
+};
+
 void CElectrifiedWire::KeyValue( KeyValueData* pkvd )
 {
 	if( FStrEq( pkvd->szKeyName, "sparkfrequency" ) )
@@ -94,6 +106,12 @@ void CElectrifiedWire::KeyValue( KeyValueData* pkvd )
 
 		pkvd->fHandled = true;
 	}
+	else if (FStrEq(pkvd->szKeyName, "sfx"))
+	{
+		pkvd->fHandled = true;
+
+		bShouldEmitSparkSFX = strtol(pkvd->szValue, nullptr, 10) != 0;
+	}
 	else
 		BaseClass::KeyValue( pkvd );
 }
@@ -101,6 +119,8 @@ void CElectrifiedWire::KeyValue( KeyValueData* pkvd )
 void CElectrifiedWire::Precache()
 {
 	BaseClass::Precache();
+
+	PRECACHE_SOUND_ARRAY(pSparkSounds);
 
 	m_iLightningSprite = PRECACHE_MODEL( "sprites/lgtning.spr" );
 }
@@ -206,6 +226,12 @@ bool CElectrifiedWire::ShouldDoEffect( const int iFrequency )
 void CElectrifiedWire::DoSpark( const size_t uiSegment, const bool bExertForce )
 {
 	const Vector vecOrigin = GetSegmentAttachmentPoint( uiSegment );
+
+	if (bShouldEmitSparkSFX)
+	{
+		if (RANDOM_LONG(0, 4) == 0)
+			EMIT_SOUND_ARRAY_DYN(CHAN_BODY, pSparkSounds);
+	}
 
 	UTIL_Sparks( vecOrigin );
 

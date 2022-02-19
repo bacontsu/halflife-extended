@@ -61,6 +61,8 @@ public:
 
 	void Touch( CBaseEntity* pOther ) override;
 
+
+
 	int Save( CSave &save ) override;
 	int Restore( CRestore &restore ) override;
 
@@ -280,6 +282,11 @@ public:
 	*	@return The attached object position.
 	*/
 	Vector GetAttachedObjectsPosition() const;
+
+	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value);
+
+	bool m_bReversedAttachmentPerms;
+	bool m_bShouldBecomeVisible;
 
 private:
 	size_t m_uiSegments;

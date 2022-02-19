@@ -25,6 +25,8 @@
 
 #include "CRope.h"
 
+#define SF_SPAWNINVISIBLE 32
+
 static const char* const g_pszCreakSounds[] = 
 {
 	"items/rope1.wav",
@@ -76,6 +78,8 @@ CRope::~CRope()
 
 	delete[] m_pSprings;
 }
+
+
 
 void CRope::KeyValue( KeyValueData* pkvd )
 {
@@ -247,9 +251,18 @@ void CRope::Think()
 
 	SetRopeSegments( m_uiSegments, ppPrimarySegs, ppHiddenSegs );
 
+
+
 	if( ShouldCreak() )
 	{
 		Creak();
+	}
+
+	// this rope has reversed attachment perms and has just been ridden, reset it so after two seconds you can climb on it again
+	if (IsAcceptingAttachment() == false && m_bReversedAttachmentPerms == false && m_flDetachTime != 0)
+	{
+		if(gpGlobals->time - m_flDetachTime >= 2.0)
+			m_bReversedAttachmentPerms = true;
 	}
 
 	pev->nextthink = gpGlobals->time + 0.001;
@@ -1000,6 +1013,7 @@ void CRope::DetachObject()
 {
 	m_bObjectAttached = false;
 	m_flDetachTime = gpGlobals->time;
+	m_bReversedAttachmentPerms = false;
 }
 
 bool CRope::IsAcceptingAttachment() const
@@ -1008,7 +1022,7 @@ bool CRope::IsAcceptingAttachment() const
 	{
 		return !m_bDisallowPlayerAttachment;
 	}
-
+	
 	return false;
 }
 
@@ -1138,3 +1152,20 @@ Vector CRope::GetAttachedObjectsPosition() const
 
 	return vecResult;
 }
+
+void CRope::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
+{
+	if (m_bReversedAttachmentPerms == true)
+		m_bReversedAttachmentPerms = false;
+	else m_bReversedAttachmentPerms = true;
+
+	if(IsAcceptingAttachment() == false)
+		m_flDetachTime = 0;// so our rope with reversed perms doesn't meet the conditions in Think() and doesn't become useable after 2 secs
+
+	if (pev->spawnflags & SF_SPAWNINVISIBLE)
+	{
+		m_bShouldBecomeVisible = true;
+	}
+}
+
+

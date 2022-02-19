@@ -22,6 +22,8 @@
 
 #include "CRopeSegment.h"
 
+#define SF_SPAWNINVISIBLE 32
+
 TYPEDESCRIPTION	CRopeSegment::m_SaveData[] =
 {
 	DEFINE_FIELD( CRopeSegment, m_pSample, FIELD_CLASSPTR ),
@@ -67,7 +69,12 @@ void CRopeSegment::Spawn()
 
 void CRopeSegment::Think()
 {
-	//Do nothing.
+	if (m_pSample->GetMasterRope()->m_bShouldBecomeVisible == true)
+	{
+		pev->rendermode = kRenderNormal;
+		pev->renderamt = 255;
+	}
+	pev->nextthink = gpGlobals->time + 0.5;
 }
 
 void CRopeSegment::Touch( CBaseEntity* pOther )
@@ -82,52 +89,59 @@ void CRopeSegment::Touch( CBaseEntity* pOther )
 			pOther->TakeDamage( pev, pev, 1, DMG_SHOCK );
 		}
 
-		if( m_pSample->GetMasterRope()->IsAcceptingAttachment() && !pPlayer->IsOnRope() )
+		if ((m_pSample->GetMasterRope()->IsAcceptingAttachment() == true && m_pSample->GetMasterRope()->m_bReversedAttachmentPerms == false) ||
+			(m_pSample->GetMasterRope()->IsAcceptingAttachment() == false && m_pSample->GetMasterRope()->m_bReversedAttachmentPerms == true))
 		{
-			if( m_bCanBeGrabbed )
+			if (!pPlayer->IsOnRope())
 			{
-				auto& data = m_pSample->GetData();
-
-				UTIL_SetOrigin( pOther->pev, data.mPosition );
-
-				pPlayer->SetOnRopeState( true );
-				pPlayer->SetRope( m_pSample->GetMasterRope() );
-				m_pSample->GetMasterRope()->AttachObjectToSegment( this );
-
-				const Vector& vecVelocity = pOther->pev->velocity;
-
-				if( vecVelocity.Length() > 0.5 )
+				if (m_bCanBeGrabbed)
 				{
-					//Apply some external force to move the rope. - Solokiller
-					data.mApplyExternalForce = true;
+					auto& data = m_pSample->GetData();
 
-					data.mExternalForce = data.mExternalForce + vecVelocity * 750;
-				}
+					UTIL_SetOrigin(pOther->pev, data.mPosition);
 
-				if( m_pSample->GetMasterRope()->IsSoundAllowed() )
-				{
-					EMIT_SOUND( edict(), CHAN_BODY, "items/grab_rope.wav", 1.0, ATTN_NORM );
-				}
-			}
-			else
-			{
-				//This segment cannot be grabbed, so grab the highest one if possible. - Solokiller
-				auto pRope = m_pSample->GetMasterRope();
+					pPlayer->SetOnRopeState(true);
+					pPlayer->SetRope(m_pSample->GetMasterRope());
+					m_pSample->GetMasterRope()->AttachObjectToSegment(this);
 
-				CRopeSegment* pSegment;
 
-				if( pRope->GetNumSegments() <= 4 )
-				{
-					//Fewer than 5 segments exist, so allow grabbing the last one. - Solokiller
-					pSegment = pRope->GetSegments()[ pRope->GetNumSegments() - 1 ];
-					pSegment->SetCanBeGrabbed( true );
+					const Vector& vecVelocity = pOther->pev->velocity;
+
+					if (vecVelocity.Length() > 0.5)
+					{
+						//Apply some external force to move the rope. - Solokiller
+						data.mApplyExternalForce = true;
+
+						data.mExternalForce = data.mExternalForce + vecVelocity * 750;
+					}
+
+					if (m_pSample->GetMasterRope()->IsSoundAllowed())
+					{
+						EMIT_SOUND(edict(), CHAN_BODY, "items/grab_rope.wav", 1.0, ATTN_NORM);
+					}
+
+
 				}
 				else
 				{
-					pSegment = pRope->GetSegments()[ 4 ];
-				}
+					//This segment cannot be grabbed, so grab the highest one if possible. - Solokiller
+					auto pRope = m_pSample->GetMasterRope();
 
-				pSegment->Touch( pOther );
+					CRopeSegment* pSegment;
+
+					if (pRope->GetNumSegments() <= 4)
+					{
+						//Fewer than 5 segments exist, so allow grabbing the last one. - Solokiller
+						pSegment = pRope->GetSegments()[pRope->GetNumSegments() - 1];
+						pSegment->SetCanBeGrabbed(true);
+					}
+					else
+					{
+						pSegment = pRope->GetSegments()[4];
+					}
+
+					pSegment->Touch(pOther);
+				}
 			}
 		}
 	}
@@ -140,12 +154,18 @@ CRopeSegment* CRopeSegment::CreateSegment( CRopeSample* pSample, string_t iszMod
 	pSegment->m_iszModelName = iszModelName;
 
 	pSegment->Spawn();
-
+	
 	pSegment->m_pSample = pSample;
 
 	pSegment->m_bCauseDamage = false;
 	pSegment->m_bCanBeGrabbed = true;
 	pSegment->m_flDefaultMass = pSample->GetData().mMassReciprocal;
+
+	if (pSample->GetMasterRope()->pev->spawnflags & SF_SPAWNINVISIBLE)
+	{
+		pSegment->pev->rendermode = kRenderTransTexture;
+		pSegment->pev->renderamt = 0;
+	}
 
 	return pSegment;
 }

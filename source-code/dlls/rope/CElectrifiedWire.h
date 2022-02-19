@@ -71,6 +71,10 @@ public:
 	int m_iBodySparkFrequency;
 	int m_iLightningFrequency;
 
+	bool bShouldEmitSparkSFX;
+
+	static const char* pSparkSounds[];
+
 	int m_iXJoltForce;
 	int m_iYJoltForce;
 	int m_iZJoltForce;
