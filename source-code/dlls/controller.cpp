@@ -396,6 +396,7 @@ void CController :: Spawn()
 void CController :: Precache()
 {
 	PRECACHE_MODEL("models/controller.mdl");
+	PRECACHE_MODEL("models/gibs/gibs_controller.mdl");
 
 	PRECACHE_SOUND_ARRAY( pAttackSounds );
 	PRECACHE_SOUND_ARRAY( pIdleSounds );
