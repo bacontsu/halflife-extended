@@ -1283,6 +1283,8 @@ void COFTorchAlly :: Precache()
 	PRECACHE_MODEL("models/hgrunt_medtorch.mdl");
 	PRECACHE_MODEL( TORCH_BEAM_SPRITE );
 
+	PRECACHE_MODEL("models/gibs/gib_hgrunt.mdl");
+
 	TalkInit();
 
 	PRECACHE_SOUND( "hgrunt/gr_mgun1.wav" );

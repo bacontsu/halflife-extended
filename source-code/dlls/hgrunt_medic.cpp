@@ -1221,6 +1221,8 @@ void COFMedicAlly :: Precache()
 {
 	PRECACHE_MODEL("models/hgrunt_medtorch.mdl");
 
+	PRECACHE_MODEL("models/gibs/gib_hgrunt.mdl");
+
 	TalkInit();
 
 	PRECACHE_SOUND( "hgrunt/gr_mgun1.wav" );
