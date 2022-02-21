@@ -539,7 +539,7 @@ void CTripmine::WeaponIdle()
 		skin++;
 		if (skin > 7) { skin = 0; }
 		SetWeaponSkin(skin);
-		ALERT(at_console, "skin %i", skin);
+		// ALERT(at_console, "skin %i", skin);
 		nextAnimUpdate = gpGlobals->time + 0.1f;
 	}
 
