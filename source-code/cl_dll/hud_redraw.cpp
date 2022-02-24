@@ -22,7 +22,15 @@
 #include "vgui_TeamFortressViewport.h"
 #include "vgui_StatsMenuPanel.h"
 
-void HUD_DrawBloodOverlay( void );
+#include "com_model.h"
+#include "triangleapi.h"
+
+
+void HUD_DrawBloodOverlay(void);
+
+extern int g_iUseEnt;
+void HUD_MarkUseableEnt();
+
 
 #define MAX_LOGO_FRAMES 56
 
@@ -232,14 +240,10 @@ int CHud :: Redraw( float flTime, int intermission )
 		SPR_DrawAdditive( 0, mx, my, NULL );
 	}
 	*/
-
-	if (discordUpdate > m_flTime + CVAR_GET_FLOAT("discord_rpc_updaterate"))
-		discordUpdate = m_flTime;
-
-	if (discordUpdate <= m_flTime)
+	if (g_iUseEnt == 1)
 	{
-		DiscordUpdate();
-		discordUpdate = m_flTime + CVAR_GET_FLOAT("discord_rpc_updaterate");
+		HUD_MarkUseableEnt();
+		g_iUseEnt = 0;
 	}
 
 	return 1;
@@ -456,3 +460,53 @@ int CHud::DrawHudNumberReverse(int x, int y, int number, int flags, int r, int g
 	return x;
 }
 
+// screen edge offset
+#define BORDER_X XRES(40)
+#define BORDER_Y YRES(40)
+
+// line width
+#define BRACKET_TX XRES(2)
+#define BRACKET_TY YRES(2)
+
+// line length
+#define BRACKET_LX XRES(10)
+#define BRACKET_LY YRES(10)
+
+void HUD_MarkUseableEnt(void)
+{
+	
+	if (g_iUseEnt <= 0)
+		return;
+
+	gEngfuncs.pTriAPI->RenderMode(kRenderTransAdd); //additive
+	gEngfuncs.pTriAPI->Color4f(1, 1, 1, 1); //set 
+	gEngfuncs.pTriAPI->Brightness(1);
+	gEngfuncs.pTriAPI->SpriteTexture((struct model_s*)
+	gEngfuncs.GetSpritePointer(SPR_Load("sprites/effects/swap.spr")), 4);
+
+	gEngfuncs.pTriAPI->CullFace(TRI_NONE); //no culling
+	gEngfuncs.pTriAPI->Begin(TRI_QUADS); //start our quad
+
+	float centerx = ScreenWidth / 2;
+	float centery = ScreenHeight / 2;
+
+	//top left
+	gEngfuncs.pTriAPI->TexCoord2f(0, 0);
+	gEngfuncs.pTriAPI->Vertex3f(centerx - 32, centery - 32, 0);
+
+	//bottom left
+	gEngfuncs.pTriAPI->TexCoord2f(0, 1);
+	gEngfuncs.pTriAPI->Vertex3f(centerx - 32, centery + 32, 0);
+
+	//bottom right
+	gEngfuncs.pTriAPI->TexCoord2f(1, 1);
+	gEngfuncs.pTriAPI->Vertex3f(centerx + 32, centery + 32, 0);
+
+	//top right
+	gEngfuncs.pTriAPI->TexCoord2f(1.0f, 0);
+	gEngfuncs.pTriAPI->Vertex3f(centerx + 32, centery - 32, 0);
+
+	gEngfuncs.pTriAPI->End(); //end our list of vertexes
+	gEngfuncs.pTriAPI->RenderMode(kRenderNormal); //return to normal
+
+}

@@ -734,7 +734,7 @@ public:
 	// discord rpc
 	float discordUpdate = 0.0f;
 	int runningTime;
-
+	bool isOnMenu;
 
 	int m_iFontHeight;
 	int DrawHudNumber(int x, int y, int iFlags, int iNumber, int r, int g, int b);

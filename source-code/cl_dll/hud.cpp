@@ -880,12 +880,41 @@ void CHud::DiscordUpdate()
 	const char* levelName = gEngfuncs.pfnGetLevelName();
 	strcat(playingMsg, levelName);
 
-	discordPresence.startTimestamp = runningTime; // use recorded time
-	discordPresence.state = "Playing In-game";
-	discordPresence.details = playingMsg;
+	// set logo and name
 	discordPresence.largeImageKey = "extended2"; //large image file name no extension
 	discordPresence.largeImageText = "Half-Life Extended";
 	discordPresence.smallImageKey = "   "; //same as large
 	discordPresence.smallImageText = "   "; //displays on hover
-	Discord_UpdatePresence(&discordPresence); //do the do
+
+
+	if (strlen(gEngfuncs.pfnGetLevelName()) > 4)
+	{
+		if (discordUpdate > m_flTime + CVAR_GET_FLOAT("discord_rpc_updaterate"))
+			discordUpdate = m_flTime;
+
+		discordPresence.state = "Playing In-game";
+		discordPresence.details = playingMsg;
+		discordPresence.startTimestamp = runningTime; // use recorded time
+
+		if (discordUpdate <= m_flTime)
+		{
+			Discord_UpdatePresence(&discordPresence); //do the do
+			isOnMenu = false;
+
+			discordUpdate = m_flTime + CVAR_GET_FLOAT("discord_rpc_updaterate");
+		}
+	}
+	else
+	{
+		if (!isOnMenu)
+		{
+			discordPresence.state = "in Menu";
+			discordPresence.details = nullptr;
+			discordPresence.startTimestamp = 0; // reset
+
+			Discord_UpdatePresence(&discordPresence); //do the do
+			isOnMenu = true;
+		}
+	}
+
 }

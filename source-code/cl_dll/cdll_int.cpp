@@ -266,6 +266,10 @@ void DLLEXPORT HUD_Frame( double time )
 //	RecClHudFrame(time);
 
 	GetClientVoiceMgr()->Frame(time);
+
+	// discord rich presence
+	gHUD.DiscordUpdate();
+	
 }
 
 

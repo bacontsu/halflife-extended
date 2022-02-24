@@ -1044,4 +1044,7 @@ void DLLEXPORT HUD_Shutdown()
 #endif
 	
 	CL_UnloadParticleMan();
+
+	// discord rpc
+	gHUD.DiscordShutdown();
 }
