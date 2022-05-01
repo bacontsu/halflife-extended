@@ -23,53 +23,9 @@
 #include	"cbase.h"
 #include	"monsters.h"
 #include	"schedule.h"
-#include	"weapons.h"
 
-namespace ZecuBodygroup
-{
-	enum ZecuBodygroup
-	{
-		Body = 0,
-		Crab,
-		Grenade
-	};
-}
-
-namespace Body
-{
-	enum Body
-	{
-		grunt = 0,
-		saw,
-		rpg,
-		engi,
-		medic,
-		massn
-	};
-}
-
-namespace Crab
-{
-	enum Crab
-	{
-		gasmask_crab = 0,
-		gasmask_exposed,
-		soldier_crab,
-		soldier_exposed,
-		massn_crab,
-		massn_exposed,
-	};
-}
-
-namespace Grenade
-{
-	enum Grenade
-	{
-		none = 0,
-		armed
-	};
-}
-
+#define SF_DROP_MEDKIT 128
+#define SF_DROP_GRENADE 256
 
 
 //=========================================================
@@ -78,11 +34,8 @@ namespace Grenade
 #define	ZOMBIE_SOLDIER_AE_ATTACK_RIGHT		0x01
 #define	ZOMBIE_SOLDIER_AE_ATTACK_LEFT		0x02
 #define	ZOMBIE_SOLDIER_AE_ATTACK_BOTH		0x03
-#define	ZOMBIE_SOLDIER_AE_PULL_GRENADE		0x04
 
 #define ZOMBIE_SOLDIER_FLINCH_DELAY			2		// at most one flinch every n secs
-
-#define ZOMBIE_CRAB          "monster_headcrab" // headcrab jumps from zombie
 
 class CZombieSoldier : public CBaseMonster
 {
@@ -93,11 +46,8 @@ public:
 	int  Classify () override;
 	void HandleAnimEvent( MonsterEvent_t *pEvent ) override;
 	int IgnoreConditions () override;
-	void SpawnCrab(); // headcrab jumps from zombie
 
 	float m_flNextFlinch;
-	float m_flExplodeTime = -1;//time when we explode
-	float flHeadDmg;
 
 	void GibMonster();
 
@@ -107,15 +57,6 @@ public:
 	void AttackSound();
 
 	void Killed(entvars_t* pevAttacker, int iGib) override;
-	BOOL CheckMeleeAttack1(float flDot, float flDist) override;
-	BOOL CheckMeleeAttack2(float flDot, float flDist) override;
-
-	Schedule_t* GetScheduleOfType(int Type);
-	Schedule_t* GetSchedule(void);
-
-	void SetActivity(Activity NewActivity) override;
-
-	void PrescheduleThink() override;
 
 	static const char *pAttackSounds[];
 	static const char *pIdleSounds[];
@@ -124,13 +65,10 @@ public:
 	static const char *pAttackHitSounds[];
 	static const char *pAttackMissSounds[];
 
-	CUSTOM_SCHEDULES;
-
 	// No range attacks
 	BOOL CheckRangeAttack1 ( float flDot, float flDist ) override { return FALSE; }
 	BOOL CheckRangeAttack2 ( float flDot, float flDist ) override { return FALSE; }
 	int TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType ) override;
-	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;
 };
 
 LINK_ENTITY_TO_CLASS( monster_zombie_soldier, CZombieSoldier );
@@ -342,90 +280,10 @@ void CZombieSoldier :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}
 		break;
 
-		case ZOMBIE_SOLDIER_AE_PULL_GRENADE:
-		{
-			SetBodygroup(ZecuBodygroup::Grenade, Grenade::armed);
-
-			m_flExplodeTime = gpGlobals->time + 2.5f;
-		}
-
 		default:
 			CBaseMonster::HandleAnimEvent( pEvent );
 			break;
 	}
-}
-
-//=========================================================
-// CheckMeleeAttack1
-//=========================================================
-BOOL CZombieSoldier::CheckMeleeAttack1(float flDot, float flDist)
-{
-	if (GetBodygroup(ZecuBodygroup::Body) == 4)
-	{
-		if (flDist <= 80 && flDot >= 0.7)
-			return TRUE;
-	}
-	else
-	{
-		if (flDist <= 160 && flDot >= 0.7)
-			return TRUE;
-	}
-
-	return FALSE;
-}
-
-//=========================================================
-// CheckMeleeAttack2
-//=========================================================
-BOOL CZombieSoldier::CheckMeleeAttack2(float flDot, float flDist)
-{
-	if (GetBodygroup(ZecuBodygroup::Grenade) == Grenade::armed)
-		return FALSE;
-	else CBaseMonster::CheckMeleeAttack2(flDot, flDist);
-}
-
-void CZombieSoldier::PrescheduleThink()
-{
-	if (GetBodygroup(ZecuBodygroup::Grenade) == Grenade::armed)
-	{
-		if ((gpGlobals->time >= m_flExplodeTime))
-		{
-			CGrenade::ShootTimed(pev, pev->origin + pev->view_ofs, g_vecZero, 0.01);
-		}
-
-		if (m_IdealActivity == ACT_WALK)
-			m_IdealActivity = ACT_RUN;
-	}
-
-}
-
-//=========================================================
-// Spawn Headcrab - headcrab jumps from zombie
-//=========================================================
-void CZombieSoldier::SpawnCrab()
-{
-	MAKE_VECTORS(pev->angles);
-	Vector vecSrc = pev->origin + gpGlobals->v_up * 36;
-	CBaseEntity* pCrab = CBaseEntity::Create(ZOMBIE_CRAB, vecSrc, pev->angles, edict()); // create the crab
-
-	// setup 
-	pCrab->pev->health = gSkillData.headcrabHealth - flHeadDmg;
-	pCrab->pev->spawnflags |= SF_MONSTER_FALL_TO_GROUND; // make the crab fall
-
-	// remove crab zombie
-	switch (GetBodygroup(ZecuBodygroup::Crab))
-	{
-	case Crab::gasmask_crab:
-		SetBodygroup(ZecuBodygroup::Crab, Crab::gasmask_exposed);
-		break;
-	case Crab::massn_crab:
-		SetBodygroup(ZecuBodygroup::Crab, Crab::massn_exposed);
-		break;
-	default:
-		SetBodygroup(ZecuBodygroup::Crab, Crab::soldier_exposed);
-		break;
-	}
-	
 }
 
 //=========================================================
@@ -449,20 +307,7 @@ void CZombieSoldier :: Spawn()
 
 	if (pev->body == -1)
 	{// -1 chooses a random body
-		pev->body = RANDOM_LONG(0, 5);// pick a body, any body
-	}
-
-	switch (pev->body)
-	{
-	case 0:
-		SetBodygroup(ZecuBodygroup::Crab, Crab::gasmask_crab); // gasmask for the "grunt" body
-		break;
-	case 5:
-		SetBodygroup(ZecuBodygroup::Crab, Crab::massn_crab); // black cloth for the "Black Ops" body
-		break;
-	default:
-		SetBodygroup(ZecuBodygroup::Crab, Crab::soldier_crab);
-		break;
+		pev->body = RANDOM_LONG(0, 4);// pick a body, any body
 	}
 
 	MonsterInit();
@@ -477,8 +322,6 @@ void CZombieSoldier :: Precache()
 
 	PRECACHE_MODEL("models/zombie_soldier.mdl");
 	PRECACHE_MODEL("models/gibs/gibs_zombie.mdl");
-	UTIL_PrecacheOther(ZOMBIE_CRAB);
-	UTIL_PrecacheOther("item_healthkit");
 
 	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
@@ -502,134 +345,7 @@ void CZombieSoldier :: Precache()
 //=========================================================
 // AI Schedules Specific to this monster
 //=========================================================
-enum
-{
-	SCHED_ZECU_PULL_GRENADE = LAST_COMMON_SCHEDULE + 1,
-};
-//=========================================================
-// PullGrenade
-//=========================================================
 
-Task_t	tlPullGrenade[] =
-{
-	{ TASK_STOP_MOVING,			0				},
-	{ TASK_PLAY_SEQUENCE,		(float)ACT_ARM	},
-};
-
-Schedule_t	slPullGrenade[] =
-{
-	{
-		tlPullGrenade,
-		ARRAYSIZE(tlPullGrenade),
-		0,
-		0,
-		"Pull Grenade"
-	},
-};
-
-DEFINE_CUSTOM_SCHEDULES(CZombieSoldier)
-{
-	slPullGrenade
-};
-
-IMPLEMENT_CUSTOM_SCHEDULES(CZombieSoldier, CBaseMonster);
-
-//=========================================================
-// Any custom shedules?
-//=========================================================
-Schedule_t* CZombieSoldier::GetScheduleOfType(int Type)
-{
-	switch (Type)
-	{
-	case SCHED_ZECU_PULL_GRENADE:
-		return slPullGrenade;
-		break;
-
-	}
-	return CBaseMonster::GetScheduleOfType(Type);
-
-}
-
-//=========================================================
-// Load up the schedules so ai isn't dumb
-//=========================================================
-Schedule_t* CZombieSoldier::GetSchedule(void)
-{
-	// Call another switch class, to check the monster's attitude
-	switch (m_MonsterState)
-	{
-	case MONSTERSTATE_ALERT:
-	case MONSTERSTATE_COMBAT:
-	{
-		if (HasConditions(bits_COND_CAN_MELEE_ATTACK2) && GetBodygroup(ZecuBodygroup::Grenade) == Grenade::armed)
-			ClearConditions(bits_COND_CAN_MELEE_ATTACK2);
-
-
-		if (HasConditions(bits_COND_CAN_MELEE_ATTACK1))
-		{
-			if (GetBodygroup(ZecuBodygroup::Body) == 4)
-				return GetScheduleOfType(SCHED_MELEE_ATTACK1);
-			if (GetBodygroup(ZecuBodygroup::Grenade) != Grenade::armed)
-				return GetScheduleOfType(SCHED_ZECU_PULL_GRENADE);
-			if (GetBodygroup(ZecuBodygroup::Grenade) == Grenade::armed)
-				return GetScheduleOfType(SCHED_CHASE_ENEMY);
-		}
-	}
-	break;
-	}
-	return CBaseMonster::GetSchedule();
-}
-
-//=========================================================
-// SetActivity 
-//=========================================================
-void CZombieSoldier::SetActivity(Activity NewActivity)
-{
-	int	iSequence = -1;
-	void* pmodel = GET_MODEL_PTR(ENT(pev));
-
-	switch (NewActivity)
-	{
-	case ACT_WALK:
-		if (GetBodygroup(ZecuBodygroup::Grenade) == Grenade::armed)
-		{
-			NewActivity = ACT_RUN;
-		}
-		iSequence = LookupActivity(NewActivity);
-		break;
-	case ACT_RUN:
-		if (GetBodygroup(ZecuBodygroup::Grenade) != Grenade::armed)
-		{
-			NewActivity = ACT_WALK;
-		}
-		iSequence = LookupSequence("gren_run");
-		break;
-	default:
-		iSequence = LookupActivity(NewActivity);
-		break;
-	}
-
-	m_Activity = NewActivity; // Go ahead and set this so it doesn't keep trying when the anim is not present
-
-	// Set to the desired anim, or default anim if the desired is not present
-	if (iSequence > -1)
-	{
-		if (pev->sequence != iSequence || !m_fSequenceLoops)
-		{
-			pev->frame = 0;
-		}
-
-		pev->sequence = iSequence;	// Set to the reset anim (if it's there)
-		ResetSequenceInfo();
-		SetYawSpeed();
-	}
-	else
-	{
-		// Not available try to get default anim
-		ALERT(at_console, "%s has no sequence for act:%d\n", STRING(pev->classname), NewActivity);
-		pev->sequence = 0;	// Set to the reset anim (if it's there)
-	}
-}
 
 
 int CZombieSoldier::IgnoreConditions ()
@@ -657,36 +373,16 @@ int CZombieSoldier::IgnoreConditions ()
 	
 }
 
-//=========================================================
-// Hitbox handling - store total head damage 
-//=========================================================
-void CZombieSoldier::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType)
-{
-	switch (ptr->iHitgroup)
-	{
-	case HITGROUP_HEAD:
-	{
-		flHeadDmg += flDamage;
-		break;
-	}
-	}
-
-	CBaseMonster::TraceAttack(pevAttacker, flDamage, vecDir, ptr, bitsDamageType);
-}
-
 void CZombieSoldier::Killed(entvars_t* pevAttacker, int iGib)
 {
-	if (GetBodygroup(ZecuBodygroup::Body) == 4)
-		CBaseEntity::Create("item_healthkit", pev->origin, pev->angles);
-	else
-		CBaseEntity::Create("weapon_handgrenade", pev->origin, pev->angles);
 
-	if (GetBodygroup(ZecuBodygroup::Crab) == 0 || GetBodygroup(ZecuBodygroup::Crab) == 2 || GetBodygroup(ZecuBodygroup::Crab) == 4)
+	if (pev->spawnflags & SF_DROP_GRENADE)
 	{
-		if (flHeadDmg < gSkillData.headcrabHealth)
-		{
-			SpawnCrab();
-		}
+		DropItem("weapon_handgrenade", Vector(pev->origin - Vector(0, 0, 20)), pev->angles);
+	}
+	if (pev->spawnflags & SF_DROP_MEDKIT)
+	{
+		DropItem("item_healthkit", Vector(pev->origin - Vector(0, 0, 20)), pev->angles);
 	}
 
 	CBaseMonster::Killed(pevAttacker, iGib);
