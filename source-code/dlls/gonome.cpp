@@ -12,7 +12,9 @@
 *   use or distribution of this code by or to any unlicensed person is illegal.
 *
 * -----------------------------------------
-* Half-Life:Extended code by trvps (blsha)
+* Half-Life:Extended code by
+** trvps (blsha)
+** DeanAMX (ConTraZVII)
 * -----------------------------------------
 ****/
 //=========================================================
@@ -32,7 +34,7 @@
 #include "animation.h"
 
 
-#define	NUM_GONOME_SKINS		5 // five skin variations available for gonome model
+#define	NUM_GONOME_SKINS		16 // fifteen skin variations available for gonome model
 //=========================================================
 // Monster's Anim Events Go Here
 //=========================================================
@@ -100,7 +102,7 @@ void COFGonomeGuts::Spawn()
 	}
 	else
 	{
-		SET_MODEL( edict(), "sprites/bigspit.spr" );
+		SET_MODEL(edict(), "sprites/bigspit.spr");
 		pev->rendercolor.x = 128;
 		pev->rendercolor.x = 32;
 		pev->rendercolor.x = 128;
@@ -202,6 +204,9 @@ enum
 	TASK_GONOME_GET_PATH_TO_ENEMY_CORPSE = LAST_COMMON_TASK + 1,
 };
 
+//=====================================================================================================================
+// GONOME MAIN CODE
+//=====================================================================================================================
 
 class COFGonome : public CBaseMonster
 {
@@ -250,10 +255,15 @@ public:
 	float m_flNextFlinch;
 	float m_flNextThrowTime;
 
+	int m_iBodyGibs;
 
 	//TODO: needs to be EHANDLE, save/restored or a save during a windup will cause problems
 	COFGonomeGuts* m_pGonomeGuts;
 	BOOL m_fPlayerLocked;
+
+	void KeyValue(KeyValueData* pkvd) override;
+	int m_Grenade;
+	void SpawnCrab(Vector vecStart, Vector vecVelocity);
 };
 
 TYPEDESCRIPTION	COFGonome::m_SaveData[] =
@@ -371,7 +381,7 @@ void COFGonome :: SetYawSpeed ()
 int COFGonome :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType )
 {
 	// Take 15% damage from bullets
-	if ( bitsDamageType == DMG_BULLET )
+	if ( bitsDamageType == DMG_BULLET)
 	{
 		Vector vecDir = pev->origin - (pevInflictor->absmin + pevInflictor->absmax) * 0.5;
 		vecDir = vecDir.Normalize();
@@ -463,13 +473,13 @@ void COFGonome :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				//Only if we still have an enemy at this point
 				if( m_hEnemy )
 				{
+					if (pev->skin == 13 && pev->skin == 14)
+						return;
+
 					Vector vecGutsPos, vecGutsAngles;
 					GetAttachment( 0, vecGutsPos, vecGutsAngles );
 
-					if( !m_pGonomeGuts )
-					{
-						m_pGonomeGuts = COFGonomeGuts::GonomeGutsCreate( vecGutsPos );
-					}
+					if (!m_pGonomeGuts) m_pGonomeGuts = COFGonomeGuts::GonomeGutsCreate(vecGutsPos);
 
 					//Attach to hand for throwing
 					m_pGonomeGuts->pev->skin = entindex();
@@ -499,11 +509,6 @@ void COFGonome :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 					UTIL_MakeVectors( pev->angles );
 
-					if( !m_pGonomeGuts )
-					{
-						m_pGonomeGuts = COFGonomeGuts::GonomeGutsCreate( vecGutsPos );
-					}
-
 					auto direction = ( m_hEnemy->pev->origin - m_hEnemy->pev->view_ofs - vecGutsPos ).Normalize();
 
 					direction = direction + Vector(
@@ -513,13 +518,41 @@ void COFGonome :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 					UTIL_BloodDrips( vecGutsPos, direction, BLOOD_COLOR_RED, 35 );
 
+					if (m_Grenade == 1)
+					{
+						if (pev->skin >= 9 && pev->skin <= 12)
+						{
+							SpawnCrab(vecGutsPos, direction * 900);
+							UTIL_Remove(m_pGonomeGuts);
+						}
+						else if (pev->skin == 13)
+						{
+							CGrenade::ShootTimed(pev, vecGutsPos, direction * 900, 3);
+							UTIL_Remove(m_pGonomeGuts);
+						}
+						else if (pev->skin == 14)
+						{
+							CGrenade::ShootContact(pev, vecGutsPos, direction * 900);
+							UTIL_Remove(m_pGonomeGuts);
+						}
+						else
+						{
+							if (!m_pGonomeGuts)
+								m_pGonomeGuts = COFGonomeGuts::GonomeGutsCreate(vecGutsPos);
+							m_pGonomeGuts->Launch(pev, vecGutsPos, direction * 900);
+						}
+					}
+					else
+					{
+						if (!m_pGonomeGuts)
+							m_pGonomeGuts = COFGonomeGuts::GonomeGutsCreate(vecGutsPos);
+						m_pGonomeGuts->Launch(pev, vecGutsPos, direction * 900);
+					}
 					//Detach from owner
 					m_pGonomeGuts->pev->skin = 0;
 					m_pGonomeGuts->pev->body = 0;
 					m_pGonomeGuts->pev->aiment = nullptr;
 					m_pGonomeGuts->pev->movetype = MOVETYPE_FLY;
-
-					m_pGonomeGuts->Launch( pev, vecGutsPos, direction * 900 );
 				}
 				else
 				{
@@ -620,10 +653,8 @@ void COFGonome :: Spawn()
 	m_pGonomeGuts = nullptr;
 	m_fPlayerLocked = false;
 
-	if (pev->skin == -1)
-	{
-		pev->skin = RANDOM_LONG(0, NUM_GONOME_SKINS-1);// pick a skin, any skin
-	}
+	if (pev->skin == -1) pev->skin = RANDOM_LONG(0, NUM_GONOME_SKINS-1);
+	if (m_Grenade == -1) m_Grenade = RANDOM_LONG(0, 1);
 
 	MonsterInit();
 }
@@ -636,7 +667,15 @@ void COFGonome :: Precache()
 	int i;
 
 	PRECACHE_MODEL("models/gonome.mdl");
+	PRECACHE_MODEL("models/w_medkit.mdl");
+	PRECACHE_MODEL("models/w_grenade.mdl");
+	PRECACHE_MODEL("models/grenade.mdl");
+
 	PRECACHE_MODEL( "sprites/bigspit.spr" );
+
+	UTIL_PrecacheOther("monster_headcrab");
+
+	PRECACHE_SOUND("items/smallmedkit1.wav");
 
 	for ( i = 0; i < ARRAYSIZE( pAttackHitSounds ); i++ )
 		PRECACHE_SOUND((char *)pAttackHitSounds[i]);
@@ -668,6 +707,8 @@ void COFGonome :: Precache()
 	PRECACHE_SOUND( "bullchicken/bc_acid1.wav" );
 	PRECACHE_SOUND( "bullchicken/bc_spithit1.wav" );
 	PRECACHE_SOUND( "bullchicken/bc_spithit2.wav" );
+
+	m_iBodyGibs = PRECACHE_MODEL("models/hgibs.mdl");
 }	
 
 //=========================================================
@@ -770,6 +811,22 @@ void COFGonome::Killed( entvars_t* pevAttacker, int iGib )
 			pPlayer->EnableControl( true );
 
 		m_fPlayerLocked = false;
+	}
+
+	if (pev->weapons == 0)
+	{
+		pev->takedamage = DAMAGE_NO;
+		RadiusDamage(pev, pev, 100, CLASS_NONE, DMG_POISON);
+		UTIL_BloodDrips(pev->origin + Vector(0, 0, 64), pev->velocity, m_bloodColor, 22);
+		UTIL_ScreenShake(pev->origin, 4, 2.5, 1, 500);
+
+		CGib::SpawnRandomGibs(pev, 10, 0);
+		CGib::SpawnRandomGibs(pev, 10, 1);
+
+		CBaseEntity::Create("item_healthkit", pev->origin, pev->velocity);
+		SpawnCrab(pev->origin + gpGlobals->v_up * 64, m_hEnemy->pev->origin);
+
+		pev->weapons = 1;
 	}
 
 	CBaseMonster::Killed( pevAttacker, iGib );
@@ -895,6 +952,16 @@ void COFGonome::SetActivity( Activity NewActivity )
 	m_IdealActivity = NewActivity;
 }
 
+void COFGonome::KeyValue(KeyValueData* pkvd)
+{
+	if (FStrEq("grenade", pkvd->szKeyName))
+	{
+		m_Grenade = atoi(pkvd->szValue);
+		pkvd->fHandled = true;
+	}
+	else CBaseMonster::KeyValue(pkvd);
+}
+
 //=========================================================
 // DEAD GONOME PROP
 //=========================================================
@@ -953,4 +1020,18 @@ void CDeadGonome::Spawn()
 	}
 
 	MonsterInitDead();
+}
+
+//=========================================================
+// Spawn Headcrab - headcrab jumps from zombie
+//=========================================================
+void COFGonome::SpawnCrab(Vector vecStart, Vector vecVelocity)
+{
+	MAKE_VECTORS(pev->angles);
+	CBaseEntity* pCrab = CBaseEntity::Create("monster_headcrab", vecStart, pev->angles, edict()); // create the crab
+
+	// setup 
+	pCrab->pev->health = gSkillData.headcrabHealth;
+	pCrab->pev->spawnflags |= SF_MONSTER_FALL_TO_GROUND; // make the crab fall
+	pCrab->pev->velocity = vecVelocity;
 }
