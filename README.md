@@ -19,3 +19,34 @@ In this section, we will list the important features of this SDK
 7) Expanded limitation for submodels, from 8-bit (255 submodels) to 32-bit (4.294.967.296 submodels)
 8) Custom Activate/Locked/Unlocked sounds for `func_button` and `func_door`
 9) Expanded NPCs variation and sub-classes
+
+## Credits
+Here is a list of credits to everyone who has contributed to this project
+### Half-Life: Updated Contributors:
+- SamVanheer/Solokiller (Half-Life: Updated Owner)
+- malortie
+- dtugend
+- JoelTroch
+- LogicAndTrick
+- fel1x-developer
+- alfred-valve
+- zaklaus
+- Jengerer
+- Maxxiii
+- thefoofighter
+- mikela-valve
+- MegaBrutal
+- johndrinkwater
+- DanielOaks
+- IntriguingTiles
+- suXinjke
+
+### Half-LIfe: Extended
+- tear-vyps
+- Bacontsu
+- Admer456
+- FranticDreamer
+- BryanHaley
+- BlueNightHawk
+- vasiavasiavasia95
+- Windawz 
