@@ -41,7 +41,7 @@ Here is a list of credits to everyone who has contributed to this project
 - IntriguingTiles
 - suXinjke
 
-### Half-LIfe: Extended
+### Half-LIfe: Extended Contributors:
 - tear-vyps
 - Bacontsu
 - Admer456
