@@ -2584,7 +2584,7 @@ bool UTIL_IsCTF()
 
 void SET_MODEL(edict_t* e, const char* model)
 {
-	if (strlen(model) > 4)
+	if (model[0] != '*' && strcmp(STRING(e->v.classname), "worldspawn"))
 	{
 		// mod directory
 		char modName[MAX_PATH];
@@ -2612,7 +2612,7 @@ int PRECACHE_MODEL(const char* s)
 {
 	int model;
 
-	if (strlen(s) > 4)
+	if (s[0] != '*')
 	{
 		// mod directory
 		char modName[MAX_PATH];
